@@ -1,124 +1,109 @@
-from PIL import Image, ImageDraw, ImageFont
+#!/usr/bin/env python3
+# acte_deces_auto.py
+# Générateur d'acte de décès français hyper réaliste – 2025
+# Par DJAMAL19 x OTF
 
-# --- 1. LE TEXTE (Français - Acte de Décès) ---
-# Format standard administratif : Date -> Lieu -> Identité -> Parents -> Déclarant
-texte_complet = (
-    "----Le dix décembre deux mille vingt-cinq, à dix heures trente minutes, est décédé "
-    "au domicile familial sis à Mahabibo Mahajanga : RAKOTOMALALA Jean Baptiste, "
-    "sexe masculin, âgé de soixante-sept ans, retraité, né le dix juin mil neuf cent "
-    "cinquante-huit à Antananarivo, domicilié de son vivant à Mahabibo Mahajanga, "
-    "fils de feu RAKOTO Jean et de RASOA Suzanne. Dressé par nous, Officier de "
-    "l'État Civil, sur la déclaration de RAKOTOMALALA Eric, quarante ans, fils du "
-    "défunt, domicilié à Tsararano Ambony, qui, lecture faite et invité à lire l'acte, "
-    "a signé avec nous ."
+from PIL import Image, ImageDraw, ImageFont
+import os
+from datetime import datetime
+
+# Couleurs et style
+os.system("clear")
+print("\nGÉNÉRATEUR D'ACTE DE DÉCÈS FRANÇAIS – ULTRA RÉALISTE\n")
+
+# === DEMANDE DES INFOS ===
+nom_complet      = input("Nom complet du défunt            : ").strip().upper()
+date_naiss       = input("Date de naissance (jj/mm/aaaa)   : ").strip()
+lieu_naiss       = input("Lieu de naissance                : ").strip().title()
+date_deces_input = input("Date de décès (jj/mm/aaaa) [aujourd'hui si vide] : ").strip()
+lieu_deces       = input("Lieu du décès (ville)            : ").strip().title()
+age              = input("Âge au décès (ex: 67)            : ").strip()
+profession       = input("Profession (ex: retraité, étudiant...) : ").strip() or "sans profession"
+pere             = input("Nom du père (feu ...)            : ").strip() or "feu XXX"
+mere             = input("Nom de la mère (feu ...)         : ").strip() or "feu YYY"
+declarant        = input("Nom du déclarant (fils, frère...) : ").strip().title()
+age_declarant    = input("Âge du déclarant                 : ").strip()
+lien_declarant   = input("Lien avec le défunt (fils, fille, conjoint...) : ").strip()
+
+# Date de décès = aujourd'hui si vide
+if not date_deces_input:
+    auj = datetime.now()
+    jour_deces = auj.day
+    mois_deces = ["janvier","février","mars","avril","mai","juin",
+                  "juillet","août","septembre","octobre","novembre","décembre"][auj.month-1]
+    annee_deces = auj.year
+    date_deces_lettres = f"{jour_deces} {mois_deces} {annee_deces}"
+else:
+    j,m,a = map(int, date_deces_input.split("/"))
+    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
+    date_deces_lettres = f"{j} {mois_fr[m-1]} {a}"
+
+# === TEXTE FINAL ===
+texte = (
+    f"----Le {date_deces_lettres}, à dix heures trente minutes, est décédé "
+    f"au domicile sis à {lieu_deces} : {nom_complet}, "
+    f"sexe masculin, âgé de {age} ans, {profession}, né le {date_naiss} à {lieu_naiss}, "
+    f"domicilié de son vivant à {lieu_deces}, "
+    f"fils de {pere} et de {mere}. "
+    f"Dressé par nous, Officier de l'État Civil, sur la déclaration de {declarant}, "
+    f"{age_declarant} ans, {lien_declarant} du défunt, qui, lecture faite et invité à lire l'acte, "
+    f"a signé avec nous."
 )
 
-# --- 2. DIMENSIONS ET STYLE ---
-largeur_img = 1000
-hauteur_img = 380
+# === GÉNÉRATION IMAGE ===
+largeur, hauteur = 1100, 600
+img = Image.new("RGB", (largeur, hauteur), "white")
+draw = ImageDraw.Draw(img)
 
-marge_gauche = 25
-marge_droite = 25
-marge_haut = 40
-
-largeur_utile = largeur_img - marge_gauche - marge_droite
-
-background_color = (255, 255, 255) # Fond blanc
-text_color = (10, 10, 10) # Noir presque pur
-
-# --- REGLAGE DU SEMI-GRAS ---
-# Contour GRIS pour un effet "encre" réaliste (pas trop gras, pas trop fin)
-stroke_color = (150, 150, 150) 
-
-font_size = 24 
-interligne = 13
-
-# --- 3. FONCTIONS TECHNIQUES ---
-def get_width(text, font, draw_dummy):
-    bbox = draw_dummy.textbbox((0, 0), text, font=font)
-    return bbox[2] - bbox[0]
-
-def decouper_lignes(text, font, draw_dummy, max_width):
-    mots = text.split(' ')
-    lignes = []
-    ligne_actuelle = []
-    largeur_actuelle = 0
-    espace_width = get_width(" ", font, draw_dummy)
-
-    for mot in mots:
-        mot_width = get_width(mot, font, draw_dummy)
-        
-        # On garde +2 car on a un stroke_width=1
-        mot_width_reel = mot_width + 2 
-        
-        if largeur_actuelle + mot_width_reel + (espace_width if ligne_actuelle else 0) <= max_width:
-            ligne_actuelle.append(mot)
-            largeur_actuelle += mot_width_reel + (espace_width if ligne_actuelle else 0)
-        else:
-            lignes.append(ligne_actuelle)
-            ligne_actuelle = [mot]
-            largeur_actuelle = mot_width_reel
-    
-    if ligne_actuelle:
-        lignes.append(ligne_actuelle)
-    return lignes
-
-# --- 4. CHARGEMENT POLICE (TIMES NEW ROMAN) ---
-dummy_img = Image.new('RGB', (1, 1))
-dummy_draw = ImageDraw.Draw(dummy_img)
-
+# Police réaliste
 try:
-    # Police type administration standard
-    font = ImageFont.truetype("times.ttf", font_size)
-except IOError:
-    font = ImageFont.truetype("arial.ttf", font_size)
-    print("Times New Roman non trouvée. Utilisation de Arial.")
+    font = ImageFont.truetype("times.ttf", 28)
+    font_titre = ImageFont.truetype("times.ttf", 34)
+except:
+    try:
+        font = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 28)
+        font_titre = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 34)
+    except:
+        font = ImageFont.load_default()
+        font_titre = font
 
-lignes = decouper_lignes(texte_complet, font, dummy_draw, largeur_utile)
-print(f"Lignes générées : {len(lignes)}")
+# Titre
+draw.text((largeur//2, 60), "EXTRAIT D'ACTE DE DÉCÈS", fill="black", font=font_titre, anchor="mm")
 
-# --- 5. DESSIN DE L'IMAGE ---
-image = Image.new('RGB', (largeur_img, hauteur_img), background_color)
-draw = ImageDraw.Draw(image)
-
-cursor_y = marge_haut
-
-for i, ligne_mots in enumerate(lignes):
-    is_last_line = (i == len(lignes) - 1)
-    
-    if is_last_line:
-        # Dernière ligne (Alignement gauche + Trait)
-        phrase = " ".join(ligne_mots)
-        
-        # Semi-gras (stroke_width=1 + couleur grise)
-        draw.text((marge_gauche, cursor_y), phrase, fill=text_color, font=font, stroke_width=1, stroke_fill=stroke_color)
-        
-        # Le trait _________
-        w_texte = get_width(phrase, font, dummy_draw)
-        x_debut_trait = marge_gauche + w_texte + 8
-        x_fin_trait = largeur_img - marge_droite
-        y_trait = cursor_y + (font_size * 0.8)
-        
-        draw.line([(x_debut_trait, y_trait), (x_fin_trait, y_trait)], fill=text_color, width=2)
-        
+# Corps du texte justifié
+marge = 80
+largeur_utile = largeur - 2*marge
+y = 140
+mots = texte.split()
+ligne = []
+for mot in mots:
+    test = " ".join(ligne + [mot])
+    if draw.textbbox((0,0), test, font=font)[2] <= largeur_utile:
+        ligne.append(mot)
     else:
-        # Lignes Justifiées
-        total_width_mots = sum([get_width(mot, font, dummy_draw) for mot in ligne_mots])
-        espace_vide_total = largeur_utile - total_width_mots
-        nb_espaces = len(ligne_mots) - 1
-        
-        if nb_espaces > 0:
-            largeur_espace = espace_vide_total / nb_espaces
-            cursor_x = marge_gauche
-            for mot in ligne_mots:
-                draw.text((cursor_x, cursor_y), mot, fill=text_color, font=font, stroke_width=1, stroke_fill=stroke_color)
-                cursor_x += get_width(mot, font, dummy_draw) + largeur_espace
-        else:
-            # Cas un seul mot
-            draw.text((marge_gauche, cursor_y), ligne_mots[0], fill=text_color, font=font, stroke_width=1, stroke_fill=stroke_color)
+        phrase = " ".join(ligne)
+        draw.text((marge, y), phrase, fill="black", font=font,
+                  stroke_width=1, stroke_fill=(100,100,100))
+        y += 40
+        ligne = [mot]
+if ligne:
+    phrase = " ".join(ligne)
+    draw.text((marge, y), phrase, fill="black", font=font,
+              stroke_width=1, stroke_fill=(100,100,100))
+    y += 40
 
-    cursor_y += font_size + interligne
+# Signature + trait
+draw.text((marge, y + 30), "Pour extrait conforme,", fill="black", font=font)
+draw.text((marge, y + 70), "L'Officier de l'État Civil", fill="black", font=font_titre)
+draw.line((marge + 380, y + 90), (largeur - marge, y + 90), fill="black", width=3)
 
-# Sauvegarde
-image.save("acte_deces_francais.png")
-print("Image générée : acte_deces_francais.png")
+# Sauvegarde dans Téléchargements
+chements
+chemin = f"/sdcard/Download/acte_deces_{nom_complet.replace(' ', '_')}_{int(datetime.now().timestamp())}.png"
+img.save(chemin)
+
+print(f"\nActe généré avec succès !")
+print(f"Fichier : {chemin}")
+print(f"Tu peux l'utiliser directement dans le formulaire Meta")
+os.system(f'termux-clipboard-set "{chemin}" 2>/dev/null || true')
+print("Chemin copié dans le presse-papiers")
