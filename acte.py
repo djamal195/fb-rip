@@ -1,44 +1,41 @@
 #!/usr/bin/env python3
-# acte_deces_auto.py
-# Générateur d'acte de décès français hyper réaliste – 2025
-# Par DJAMAL19 x OTF
+# acte_deces_auto.py – Version finale avec signature réelle
+# Par DJAMAL19 x OTF – 2025
 
 from PIL import Image, ImageDraw, ImageFont
 import os
 from datetime import datetime
 
-# Couleurs et style
-os.system("clear")
-print("\nGÉNÉRATEUR D'ACTE DE DÉCÈS FRANÇAIS – ULTRA RÉALISTE\n")
+# Chemin de ta signature (change si tu veux)
+SIGNATURE_PATH = r"D:\Haxor\signatur.jpg"  # <-- TA SIGNATURE ICI
+
+os.system("cls" if os.name == "nt" else "clear")
+print("\nGÉNÉRATEUR D'ACTE DE DÉCÈS + SIGNATURE RÉELLE – 2025\n")
 
 # === DEMANDE DES INFOS ===
 nom_complet      = input("Nom complet du défunt            : ").strip().upper()
 date_naiss       = input("Date de naissance (jj/mm/aaaa)   : ").strip()
 lieu_naiss       = input("Lieu de naissance                : ").strip().title()
-date_deces_input = input("Date de décès (jj/mm/aaaa) [aujourd'hui si vide] : ").strip()
+date_deces_input = input("Date de décès (jj/mm/aaaa) [Enter = aujourd'hui] : ").strip()
 lieu_deces       = input("Lieu du décès (ville)            : ").strip().title()
-age              = input("Âge au décès (ex: 67)            : ").strip()
-profession       = input("Profession (ex: retraité, étudiant...) : ").strip() or "sans profession"
-pere             = input("Nom du père (feu ...)            : ").strip() or "feu XXX"
-mere             = input("Nom de la mère (feu ...)         : ").strip() or "feu YYY"
-declarant        = input("Nom du déclarant (fils, frère...) : ").strip().title()
+age              = input("Âge au décès                     : ").strip()
+profession       = input("Profession (retraité, étudiant...) : ").strip() or "sans profession"
+pere             = input("Père (feu ...)                   : ").strip() or "feu XXX"
+mere             = input("Mère (feu ...)                   : ").strip() or "feu YYY"
+declarant        = input("Nom du déclarant                 : ").strip().title()
 age_declarant    = input("Âge du déclarant                 : ").strip()
-lien_declarant   = input("Lien avec le défunt (fils, fille, conjoint...) : ").strip()
+lien_declarant   = input("Lien avec le défunt (fils, etc.) : ").strip()
 
-# Date de décès = aujourd'hui si vide
+# Date de décès auto
 if not date_deces_input:
     auj = datetime.now()
-    jour_deces = auj.day
-    mois_deces = ["janvier","février","mars","avril","mai","juin",
-                  "juillet","août","septembre","octobre","novembre","décembre"][auj.month-1]
-    annee_deces = auj.year
-    date_deces_lettres = f"{jour_deces} {mois_deces} {annee_deces}"
+    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
+    date_deces_lettres = f"{auj.day} {mois_fr[auj.month-1]} {auj.year}"
 else:
     j,m,a = map(int, date_deces_input.split("/"))
     mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
     date_deces_lettres = f"{j} {mois_fr[m-1]} {a}"
 
-# === TEXTE FINAL ===
 texte = (
     f"----Le {date_deces_lettres}, à dix heures trente minutes, est décédé "
     f"au domicile sis à {lieu_deces} : {nom_complet}, "
@@ -50,19 +47,19 @@ texte = (
     f"a signé avec nous."
 )
 
-# === GÉNÉRATION IMAGE ===
-largeur, hauteur = 1100, 600
+# === CRÉATION IMAGE ===
+largeur, hauteur = 1100, 700  # un peu plus haut pour la signature
 img = Image.new("RGB", (largeur, hauteur), "white")
 draw = ImageDraw.Draw(img)
 
-# Police réaliste
+# Police
 try:
     font = ImageFont.truetype("times.ttf", 28)
-    font_titre = ImageFont.truetype("times.ttf", 34)
+    font_titre = ImageFont.truetype("times.ttf", 36)
 except:
     try:
-        font = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 28)
-        font_titre = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 34)
+        font = ImageFont.truetype("arial.ttf", 28)
+        font_titre = ImageFont.truetype("arial.ttf", 36)
     except:
         font = ImageFont.load_default()
         font_titre = font
@@ -81,29 +78,43 @@ for mot in mots:
     if draw.textbbox((0,0), test, font=font)[2] <= largeur_utile:
         ligne.append(mot)
     else:
-        phrase = " ".join(ligne)
-        draw.text((marge, y), phrase, fill="black", font=font,
+        draw.text((marge, y), " ".join(ligne), fill="black", font=font,
                   stroke_width=1, stroke_fill=(100,100,100))
         y += 40
         ligne = [mot]
 if ligne:
-    phrase = " ".join(ligne)
-    draw.text((marge, y), phrase, fill="black", font=font,
+    draw.text((marge, y), " ".join(ligne), fill="black", font=font,
               stroke_width=1, stroke_fill=(100,100,100))
-    y += 40
+    y += 60
 
-# Signature + trait
-draw.text((marge, y + 30), "Pour extrait conforme,", fill="black", font=font)
-draw.text((marge, y + 70), "L'Officier de l'État Civil", fill="black", font=font_titre)
-draw.line((marge + 380, y + 90), (largeur - marge, y + 90), fill="black", width=3)
+# Texte signature
+draw.text((marge, y), "Pour extrait conforme,", fill="black", font=font)
+draw.text((marge, y + 40), "L'Officier de l'État Civil", fill="black", font=font_titre)
 
-# Sauvegarde dans Téléchargements
-chements
-chemin = f"/sdcard/Download/acte_deces_{nom_complet.replace(' ', '_')}_{int(datetime.now().timestamp())}.png"
-img.save(chemin)
+# === COLLAGE DE LA VRAIE SIGNATURE ===
+if os.path.exists(SIGNATURE_PATH):
+    try:
+        sign = Image.open(SIGNATURE_PATH).convert("RGBA")
+        # Redimensionne proprement (max 300px de large, garde ratio)
+        sign.thumbnail((300, 150), Image.Resampling.LANCZOS)
+        
+        # Position : bas à droite
+        pos_x = largeur - sign.width - 100
+        pos_y = y + 100
+        
+        img.paste(sign, (pos_x, pos_y), sign)  # le 4e paramètre = masque alpha
+        print("Signature réelle collée avec succès !")
+    except Exception as e:
+        print(f"Erreur signature : {e}")
+else:
+    print("Signature non trouvée → trait classique")
+    draw.line([(marge + 380, y + 110), (largeur - marge, y + 110)], fill="black", width=3)
 
-print(f"\nActe généré avec succès !")
-print(f"Fichier : {chemin}")
-print(f"Tu peux l'utiliser directement dans le formulaire Meta")
-os.system(f'termux-clipboard-set "{chemin}" 2>/dev/null || true')
+# === SAUVEGARDE ===
+nom_fichier = f"acte_deces_{nom_complet.replace(' ', '_')}_{int(datetime.now().timestamp())}.png"
+img.save(nom_fichier)
+
+print(f"\nACTE GÉNÉRÉ AVEC TA SIGNATURE RÉELLE !")
+print(f"Fichier → {os.path.abspath(nom_fichier)}")
+os.system(f'termux-clipboard-set "{os.path.abspath(nom_fichier)}" 2>/dev/null || clip < "{os.path.abspath(nom_fichier)}"')
 print("Chemin copié dans le presse-papiers")
