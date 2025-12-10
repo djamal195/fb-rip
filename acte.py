@@ -1,120 +1,118 @@
 #!/usr/bin/env python3
-# acte_deces_auto.py – Version finale avec signature réelle
-# Par DJAMAL19 x OTF – 2025
+# death_certificate_english.py
+# English Death Certificate Generator + Real Signature – 2025
+# DJAMAL19 x OTF
 
 from PIL import Image, ImageDraw, ImageFont
 import os
 from datetime import datetime
 
-# Chemin de ta signature (change si tu veux)
-SIGNATURE_PATH = r"D:\Haxor\signatur.jpg"  # <-- TA SIGNATURE ICI
+# YOUR REAL SIGNATURE (change only if you move the file)
+SIGNATURE_PATH = r"signatur.jpg"
 
 os.system("cls" if os.name == "nt" else "clear")
-print("\nGÉNÉRATEUR D'ACTE DE DÉCÈS + SIGNATURE RÉELLE – 2025\n")
+print("\nENGLISH DEATH CERTIFICATE GENERATOR – ULTRA REALISTIC\n")
 
-# === DEMANDE DES INFOS ===
-nom_complet      = input("Nom complet du défunt            : ").strip().upper()
-date_naiss       = input("Date de naissance (jj/mm/aaaa)   : ").strip()
-lieu_naiss       = input("Lieu de naissance                : ").strip().title()
-date_deces_input = input("Date de décès (jj/mm/aaaa) [Enter = aujourd'hui] : ").strip()
-lieu_deces       = input("Lieu du décès (ville)            : ").strip().title()
-age              = input("Âge au décès                     : ").strip()
-profession       = input("Profession (retraité, étudiant...) : ").strip() or "sans profession"
-pere             = input("Père (feu ...)                   : ").strip() or "feu XXX"
-mere             = input("Mère (feu ...)                   : ").strip() or "feu YYY"
-declarant        = input("Nom du déclarant                 : ").strip().title()
-age_declarant    = input("Âge du déclarant                 : ").strip()
-lien_declarant   = input("Lien avec le défunt (fils, etc.) : ").strip()
+# === INPUT (English) ===
+full_name       = input("Full name of deceased             : ").strip().upper()
+birth_date       = input("Date of birth (dd/mm/yyyy)       : ").strip()
+birth_place      = input("Place of birth                   : ").strip().title()
+death_date_input = input("Date of death (dd/mm/yyyy) [today if empty] : ").strip()
+death_place      = input("Place of death (city)            : ").strip().title()
+age              = input("Age at death                     : ").strip()
+occupation       = input("Occupation (retired, student...) : ").strip() or "none"
+father           = input("Father's name (late ...)         : ").strip() or "late XXX"
+mother           = input("Mother's name (late ...)         : ").strip() or "late YYY"
+informant        = input("Name of informant                : ").strip().title()
+informant_age    = input("Informant's age                  : ").strip()
+relation         = input("Relationship to deceased         : ").strip()
 
-# Date de décès auto
-if not date_deces_input:
-    auj = datetime.now()
-    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
-    date_deces_lettres = f"{auj.day} {mois_fr[auj.month-1]} {auj.year}"
+# Auto today if empty
+if not death_date_input:
+    today = datetime.now()
+    month_en = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"]
+    death_date_letters = f"{today.day} {month_en[today.month-1]} {today.year}"
 else:
-    j,m,a = map(int, date_deces_input.split("/"))
-    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
-    date_deces_lettres = f"{j} {mois_fr[m-1]} {a}"
+    d, m, y = map(int, death_date_input.split("/"))
+    month_en = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"]
+    death_date_letters = f"{d} {month_en[m-1]} {y}"
 
-texte = (
-    f"----Le {date_deces_lettres}, à dix heures trente minutes, est décédé "
-    f"au domicile sis à {lieu_deces} : {nom_complet}, "
-    f"sexe masculin, âgé de {age} ans, {profession}, né le {date_naiss} à {lieu_naiss}, "
-    f"domicilié de son vivant à {lieu_deces}, "
-    f"fils de {pere} et de {mere}. "
-    f"Dressé par nous, Officier de l'État Civil, sur la déclaration de {declarant}, "
-    f"{age_declarant} ans, {lien_declarant} du défunt, qui, lecture faite et invité à lire l'acte, "
-    f"a signé avec nous."
+# === ENGLISH TEXT ===
+text = (
+    f"On this {death_date_letters}, at 10:30 a.m., died at his/her residence "
+    f"located in {death_place}: {full_name}, "
+    f"male, aged {age} years, {occupation}, born on {birth_date} in {birth_place}, "
+    f"resident of {death_place}, "
+    f"son of {father} and {mother}. "
+    f"Drawn up by us, Civil Registrar, upon the declaration of {informant}, "
+    f"aged {informant_age}, {relation} of the deceased, who having heard the act read, "
+    f"signed it with us."
 )
 
-# === CRÉATION IMAGE ===
-largeur, hauteur = 1100, 700  # un peu plus haut pour la signature
-img = Image.new("RGB", (largeur, hauteur), "white")
+# === CREATE IMAGE ===
+width, height = 1100, 700
+img = Image.new("RGB", (width, height), "white")
 draw = ImageDraw.Draw(img)
 
-# Police
+# Font
 try:
     font = ImageFont.truetype("times.ttf", 28)
-    font_titre = ImageFont.truetype("times.ttf", 36)
+    font_title = ImageFont.truetype("times.ttf", 38)
 except:
     try:
         font = ImageFont.truetype("arial.ttf", 28)
-        font_titre = ImageFont.truetype("arial.ttf", 36)
+        font_title = ImageFont.truetype("arial.ttf", 38)
     except:
         font = ImageFont.load_default()
-        font_titre = font
+        font_title = font
 
-# Titre
-draw.text((largeur//2, 60), "EXTRAIT D'ACTE DE DÉCÈS", fill="black", font=font_titre, anchor="mm")
+# Title
+draw.text((width//2, 60), "DEATH CERTIFICATE EXTRACT", fill="black", font=font_title, anchor="mm")
 
-# Corps du texte justifié
-marge = 80
-largeur_utile = largeur - 2*marge
-y = 140
-mots = texte.split()
-ligne = []
-for mot in mots:
-    test = " ".join(ligne + [mot])
-    if draw.textbbox((0,0), test, font=font)[2] <= largeur_utile:
-        ligne.append(mot)
+# Justified body text
+margin = 80
+max_width = width - 2*margin
+y = 150
+words = text.split()
+line = []
+for word in words:
+    test = " ".join(line + [word])
+    if draw.textbbox((0,0), test, font=font)[2] <= max_width:
+        line.append(word)
     else:
-        draw.text((marge, y), " ".join(ligne), fill="black", font=font,
-                  stroke_width=1, stroke_fill=(100,100,100))
-        y += 40
-        ligne = [mot]
-if ligne:
-    draw.text((marge, y), " ".join(ligne), fill="black", font=font,
-              stroke_width=1, stroke_fill=(100,100,100))
-    y += 60
+        draw.text((margin, y), " ".join(line), fill="black", font=font,
+                  stroke_width=1, stroke_fill=(110,110,110))
+        y += 42
+        line = [word]
+if line:
+    draw.text((margin, y), " ".join(line), fill="black", font=font,
+              stroke_width=1, stroke_fill=(110,110,110))
+    y += 70
 
-# Texte signature
-draw.text((marge, y), "Pour extrait conforme,", fill="black", font=font)
-draw.text((marge, y + 40), "L'Officier de l'État Civil", fill="black", font=font_titre)
+# Signature text
+draw.text((margin, y), "For certified true copy,", fill="black", font=font)
+draw.text((margin, y + 45), "The Civil Registrar", fill="black", font=font_title)
 
-# === COLLAGE DE LA VRAIE SIGNATURE ===
+# === PASTE YOUR REAL HANDWRITTEN SIGNATURE ===
 if os.path.exists(SIGNATURE_PATH):
     try:
         sign = Image.open(SIGNATURE_PATH).convert("RGBA")
-        # Redimensionne proprement (max 300px de large, garde ratio)
-        sign.thumbnail((300, 150), Image.Resampling.LANCZOS)
-        
-        # Position : bas à droite
-        pos_x = largeur - sign.width - 100
-        pos_y = y + 100
-        
-        img.paste(sign, (pos_x, pos_y), sign)  # le 4e paramètre = masque alpha
-        print("Signature réelle collée avec succès !")
+        sign.thumbnail((320, 160), Image.Resampling.LANCZOS)
+        img.paste(sign, (width - sign.width - 100, y + 100), sign)
+        print("Real signature successfully added!")
     except Exception as e:
-        print(f"Erreur signature : {e}")
+        print(f"Signature error: {e}")
 else:
-    print("Signature non trouvée → trait classique")
-    draw.line([(marge + 380, y + 110), (largeur - marge, y + 110)], fill="black", width=3)
+    print("Signature file not found → drawing line")
+    draw.line([(margin + 400, y + 120), (width - margin, y + 120)], fill="black", width=3)
 
-# === SAUVEGARDE ===
-nom_fichier = f"acte_deces_{nom_complet.replace(' ', '_')}_{int(datetime.now().timestamp())}.png"
-img.save(nom_fichier)
+# === SAVE ===
+filename = f"Death_Certificate_{full_name.replace(' ', '_')}_{int(datetime.now().timestamp())}.png"
+img.save(filename)
 
-print(f"\nACTE GÉNÉRÉ AVEC TA SIGNATURE RÉELLE !")
-print(f"Fichier → {os.path.abspath(nom_fichier)}")
-os.system(f'termux-clipboard-set "{os.path.abspath(nom_fichier)}" 2>/dev/null || clip < "{os.path.abspath(nom_fichier)}"')
-print("Chemin copié dans le presse-papiers")
+print(f"\nDEATH CERTIFICATE GENERATED (ENGLISH)")
+print(f"File → {os.path.abspath(filename)}")
+os.system(f'termux-clipboard-set "{os.path.abspath(filename)}" 2>/dev/null || clip < "{os.path.abspath(filename)}"')
+print("Path copied to clipboard – ready for Facebook form")
