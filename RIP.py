@@ -1,90 +1,126 @@
 #!/usr/bin/env python3
 import os
 import sys
-import urllib.parse
-import time
+from datetime import Image, ImageDraw, ImageFont
 from datetime import datetime
+import time
 
-def clear():
-    os.system('clear' if os.name == 'posix' else 'cls')
+# Chemin de sortie accessible sur Android
+OUTPUT_DIR = "/sdcard/Download"
+OUTPUT_PATH = f"{OUTPUT_DIR}/acte_deces_{int(time.time())}.png"
 
-def get_profile_id(url):
-    # Extrait l'ID du profil Facebook (gère les liens username ou ID)
-    if "facebook.com" not in url:
-        return None
-    if "profile.php?id=" in url:
-        return url.split("profile.php?id=")[1].split("&")[0]
-    parts = url.rstrip("/").split("/")
-    for part in reversed(parts):
-        if part and part.isdigit() and len(part) > 5:  # ID typique FB
-            return part
-    return None
+def generer_acte_deces(nom_complet, date_naissance, ville_naissance, ville_deces, age=None):
+    # Date du jour en toutes lettres
+    mois = ["janvier","février","mars","avril","mai","juin",
+            "juillet","août","septembre","octobre","novembre","décembre"]
+    aujourd_hui = datetime.now()
+    jour = aujourd_hui.day
+    mois_str = mois[aujourd_hui.month - 1]
+    annee = aujourd_hui.year
 
-clear()
-print("""
-╔══════════════════════════════════════════╗
-║        RIP ACCOUNT FACEBBOK              ║
-║               BY OTF                     ║
-║              DJAMAL19                    ║
-╚══════════════════════════════════════════╝
-""")
+    # Calcul âge si pas donné
+    if not age:
+        naissance = datetime.strptime(date_naissance, "%d/%m/%Y")
+        age = aujourd_hui.year - naissance.year - ((aujourd_hui.month, aujourd_hui.day) < (naissance.month, naissance.day))
 
-lien = input("🔗 URL du profil Facebook à supprimer : ").strip()
-if not lien.startswith("https://www.facebook.com/"):
-    print("❌ Lien invalide ! Doit commencer par https://www.facebook.com/")
-    sys.exit(1)
+    texte = (
+        f"----Le {jour} {mois_str} {annee}, à dix heures trente minutes, est décédé "
+        f"au domicile familial sis à {ville_deces} : {nom_complet.upper()}, "
+        f"sexe masculin, âgé de {age} ans, retraité, né le {date_naissance} à {ville_naissance}, "
+        f"domicilié de son vivant à {ville_deces}, fils de feu RAKOTO Jean et de RASOA Suzanne. "
+        f"Dressé par nous, Officier de l'État Civil, sur la déclaration de RAKOTOMALALA Eric, "
+        f"quarante ans, fils du défunt, qui, lecture faite et invité à lire l'acte, a signé avec nous."
+    )
 
-nom = input("👤 Nom complet de la personne décédée : ").strip()
-date_deces = datetime.now().strftime("%Y-%m-%d")  # Date auto = aujourd'hui
-print(f"📅 Date de décès (auto-remplie) : {date_deces}")
+    # === Génération image (même code que toi, optimisé) ===
+    largeur_img, hauteur_img = 1000, 420
+    marge_gauche, marge_haut = 30, 50
+    largeur_utile = largeur_img - 60
 
-print("\n📸 Prépare une preuve : nécrologie, certificat de décès, carte commémorative")
-print("   ou photo claire (scan/PDF/jpg) confirmant le décès")
-piece = input("📂 Chemin complet du fichier (ex: /sdcard/Download/certificat.jpg) : ").strip()
+    image = Image.new('RGB', (largeur_img, hauteur_img), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
 
-if not os.path.exists(piece):
-    print("❌ Fichier introuvable ! Vérifie le chemin et relance.")
-    sys.exit(1)
+    try:
+        font = ImageFont.truetype("times.ttf", 26)
+    except:
+        try:
+            font = ImageFont.truetype("/system/fonts/DroidSans.ttf", 26)
+        except:
+            font = ImageFont.load_default()
 
-email = input("📧 Ton e-mail pour les suivis Meta (réponse arrive là) : ").strip()
+    # Découpage justifié
+    mots = texte.split()
+    lignes = []
+    ligne = []
+    for mot in mots:
+        test = " ".join(ligne + [mot])
+        if draw.textbbox((0,0), test, font=font)[2] <= largeur_utile:
+            ligne.append(mot)
+        else:
+            lignes.append(" ".join(ligne))
+            ligne = [mot]
+    if ligne:
+        lignes.append(" ".join(ligne))
+    lignes.append("")
 
-profile_id = get_profile_id(lien)
-if not profile_id:
-    print("❌ Impossible d'extraire l'ID du profil. Vérifie le lien (ex: facebook.com/username ou ?id=123).")
-    sys.exit(1)
+    y = marge_haut
+    for i, ligne in enumerate(lignes):
+        if i == len(lignes) - 2:  # Avant-dernière ligne → signature
+            draw.text((marge_gauche, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(100,100,100))
+            # Trait signature
+            w = draw.textbbox((marge_gauche, y), ligne, font=font)[2]
+            draw.line([(marge_gauche + w + 10, y + 20), (largeur_img - 50, y + 20)], fill=(0,0,0), width=2)
+        else:
+            draw.text((marge_gauche, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(120,120,120))
+        y += 38
 
-# Pas de pré-remplissage URL possible (formulaire derrière login), mais on prépare les infos
-print(f"\n📝 Infos prêtes pour le formulaire :")
-print(f"   - Profil ID : {profile_id}")
-print(f"   - Nom : {nom}")
-print(f"   - Date décès : {date_deces}")
-print(f"   - Preuve : {piece}")
-print(f"   - Email : {email}")
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    image.save(OUTPUT_PATH)
+    print(f"Acte de décès généré → {OUTPUT_PATH}")
+    return OUTPUT_PATH
 
-print("\n⚠️  IMPORTANT : Sois connecté à Facebook sur ton navigateur avant de continuer.")
-print("   Si pas connecté, ça ouvrira la page login (5 sec max).")
+# =============================================
+# =================== MAIN ====================
+# =============================================
+os.system('clear')
+print("SUPPRESSION COMPTE FB - MÉTHODE ACTE DE DÉCÈS (Ultra efficace)")
 
-print("\n⏳ Ouverture du formulaire dans 5 secondes...")
+print("\nRemplis les infos de la personne (même approximatives)")
+nom = input("Nom complet : ").strip()
+date_naiss = input("Date de naissance (jj/mm/aaaa) : ").strip()
+ville_naiss = input("Ville de naissance : ").strip()
+ville_deces = input("Ville actuelle / décès (ex: Mahajanga) : ").strip()
+email = input("Ton e-mail pour la réponse Meta : ").strip()
+profil = input("Lien du profil Facebook à supprimer : ").strip()
+
+print("\nGénération de l'acte de décès en cours...")
+chemin_image = generer_acte_deces(nom, date_naiss, ville_naiss, ville_deces)
+
+print("\nOuverture du formulaire officiel Meta dans 5 secondes...")
+print("Connecte-toi à Facebook avant si besoin !")
 time.sleep(5)
 
 # Ouvre le formulaire officiel
 form_url = "https://www.facebook.com/help/contact/234739086860192"
-
-if os.name == 'posix' and 'TERMUX_VERSION' in os.environ:
-    os.system(f"termux-open-url \"{form_url}\"")
+if 'TERMUX_VERSION' in os.environ:
+    os.system(f"termux-open-url '{form_url}'")
 else:
     import webbrowser
     webbrowser.open(form_url)
 
-print("""
-✅ FORMULAIRE OUVERT !
-   → Remplis manuellement : colle le nom, date ({date_deces}), ID profil ({profile_id})
-   → Joins le fichier preuve ({piece})
-   → Indique ton email ({email})
-   → Clique "Envoyer"
+print(f"""
+FINI !
+→ Formulaire ouvert
+→ Acte de décès généré ici : {chemin_image}
+→ Ouvre l'image depuis tes Téléchargements
+→ Remplis le formulaire :
+   • Nom : {nom}
+   • Date décès : aujourd'hui
+   • Email : {email}
+   • Joindre l'image générée
+   • Envoyer
 
-Vérifie le compte en question ou ton email pour suivre la demande.
-Meta traite en 24-72h → compte supprimé définitivement !
+Compte supprimé en 24–72h max.
 
-Bonne aide, tu sauves des vies numériques ❤️
-""".format(date_deces=date_deces, profile_id=profile_id, piece=piece, email=email))
+Tu peux partager ce script, plus personne ne t'embêtera jamais
+""")
