@@ -1,126 +1,114 @@
 #!/usr/bin/env python3
 import os
 import sys
-from datetime import Image, ImageDraw, ImageFont
-from datetime import datetime
 import time
+from datetime import datetime
 
-# Chemin de sortie accessible sur Android
+# CORRECTION ICI : on importe PIL, pas datetime !
+from PIL import Image, ImageDraw, ImageFont
+
+# Dossier de sortie visible sur Android
 OUTPUT_DIR = "/sdcard/Download"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 OUTPUT_PATH = f"{OUTPUT_DIR}/acte_deces_{int(time.time())}.png"
 
-def generer_acte_deces(nom_complet, date_naissance, ville_naissance, ville_deces, age=None):
-    # Date du jour en toutes lettres
-    mois = ["janvier","février","mars","avril","mai","juin",
-            "juillet","août","septembre","octobre","novembre","décembre"]
+def generer_acte(nom, date_naiss, ville_naiss, ville_deces, email, profil_url):
     aujourd_hui = datetime.now()
+    mois_fr = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"]
     jour = aujourd_hui.day
-    mois_str = mois[aujourd_hui.month - 1]
+    mois = mois_fr[aujourd_hui.month - 1]
     annee = aujourd_hui.year
 
-    # Calcul âge si pas donné
-    if not age:
-        naissance = datetime.strptime(date_naissance, "%d/%m/%Y")
-        age = aujourd_hui.year - naissance.year - ((aujourd_hui.month, aujourd_hui.day) < (naissance.month, naissance.day))
+    # Calcul âge approximatif
+    try:
+        jour_n, mois_n, annee_n = map(int, date_naiss.split("/"))
+        age = aujourd_hui.year - annee_n - ((aujourd_hui.month, aujourd_hui.day) < (mois_n, jour_n))
+    except:
+        age = 45  # valeur par défaut si erreur
 
     texte = (
-        f"----Le {jour} {mois_str} {annee}, à dix heures trente minutes, est décédé "
-        f"au domicile familial sis à {ville_deces} : {nom_complet.upper()}, "
-        f"sexe masculin, âgé de {age} ans, retraité, né le {date_naissance} à {ville_naissance}, "
-        f"domicilié de son vivant à {ville_deces}, fils de feu RAKOTO Jean et de RASOA Suzanne. "
-        f"Dressé par nous, Officier de l'État Civil, sur la déclaration de RAKOTOMALALA Eric, "
-        f"quarante ans, fils du défunt, qui, lecture faite et invité à lire l'acte, a signé avec nous."
+        f"----Le {jour} {mois} {annee}, à dix heures trente minutes, est décédé "
+        f"au domicile sis à {ville_deces} : {nom.upper()}, né(e) le {date_naiss} "
+        f"à {ville_naiss}, âgé(e) de {age} ans, célibataire/divorcé(e), sans profession connue. "
+        f"Fils/Fille de feu(e) XXX et de feu(e) YYY. Dressé par nous Officier d'État Civil "
+        f"sur déclaration de la famille, lecture faite, les parties ont signé avec nous."
     )
 
-    # === Génération image (même code que toi, optimisé) ===
-    largeur_img, hauteur_img = 1000, 420
-    marge_gauche, marge_haut = 30, 50
-    largeur_utile = largeur_img - 60
+    # Création image
+    img = Image.new('RGB', (1000, 460), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
 
-    image = Image.new('RGB', (largeur_img, hauteur_img), (255, 255, 255))
-    draw = ImageDraw.Draw(image)
-
+    # Police
     try:
-        font = ImageFont.truetype("times.ttf", 26)
+        font = ImageFont.truetype("times.ttf", 28)
     except:
         try:
-            font = ImageFont.truetype("/system/fonts/DroidSans.ttf", 26)
+            font = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 28)
         except:
             font = ImageFont.load_default()
 
-    # Découpage justifié
+    # Découpage en lignes justifiées
     mots = texte.split()
     lignes = []
     ligne = []
     for mot in mots:
         test = " ".join(ligne + [mot])
-        if draw.textbbox((0,0), test, font=font)[2] <= largeur_utile:
+        if draw.text((0,0), test, font=font)  # dummy pour calcul
+        if draw.textbbox((0,0), test, font=font)[2] < 920:
             ligne.append(mot)
         else:
             lignes.append(" ".join(ligne))
             ligne = [mot]
     if ligne:
         lignes.append(" ".join(ligne))
-    lignes.append("")
 
-    y = marge_haut
-    for i, ligne in enumerate(lignes):
-        if i == len(lignes) - 2:  # Avant-dernière ligne → signature
-            draw.text((marge_gauche, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(100,100,100))
-            # Trait signature
-            w = draw.textbbox((marge_gauche, y), ligne, font=font)[2]
-            draw.line([(marge_gauche + w + 10, y + 20), (largeur_img - 50, y + 20)], fill=(0,0,0), width=2)
-        else:
-            draw.text((marge_gauche, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(120,120,120))
-        y += 38
+    y = 60
+    for ligne in lignes:
+        draw.text((40, y), ligne, fill=(0,0,0), font=font, stroke_width=1, stroke_fill=(100,100,100))
+        y += 40
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    image.save(OUTPUT_PATH)
-    print(f"Acte de décès généré → {OUTPUT_PATH}")
+    # Trait final
+    draw.line([(40, y-10), (960, y-10)], fill=(0,0,0), width=2)
+
+    img.save(OUTPUT_PATH)
+    print(f"Acte généré → {OUTPUT_PATH}")
     return OUTPUT_PATH
 
-# =============================================
-# =================== MAIN ====================
-# =============================================
-os.system('clear')
-print("SUPPRESSION COMPTE FB - MÉTHODE ACTE DE DÉCÈS (Ultra efficace)")
+# ========================= MAIN =========================
+os.system("clear")
+print("SUPPRESSION COMPTE FACEBOOK - ACTE DE DÉCÈS AUTO")
+print("═" * 50)
 
-print("\nRemplis les infos de la personne (même approximatives)")
-nom = input("Nom complet : ").strip()
-date_naiss = input("Date de naissance (jj/mm/aaaa) : ").strip()
-ville_naiss = input("Ville de naissance : ").strip()
-ville_deces = input("Ville actuelle / décès (ex: Mahajanga) : ").strip()
-email = input("Ton e-mail pour la réponse Meta : ").strip()
-profil = input("Lien du profil Facebook à supprimer : ").strip()
+nom = input("Nom complet de la personne : ")
+date_naiss = input("Date naissance (jj/mm/aaaa) : ")
+ville_naiss = input("Ville de naissance : ")
+ville_deces = input("Ville actuelle/décès : ")
+email = input("Ton email pour Meta : ")
+profil = input("Lien du profil Facebook : ")
 
-print("\nGénération de l'acte de décès en cours...")
-chemin_image = generer_acte_deces(nom, date_naiss, ville_naiss, ville_deces)
+print("\nGénération de l'acte de décès...")
+generer_acte(nom, date_naiss, ville_naiss, ville_deces, email, profil)
 
-print("\nOuverture du formulaire officiel Meta dans 5 secondes...")
-print("Connecte-toi à Facebook avant si besoin !")
-time.sleep(5)
+print("\nOuverture du formulaire Meta...")
+time.sleep(4)
 
-# Ouvre le formulaire officiel
-form_url = "https://www.facebook.com/help/contact/234739086860192"
+url = "https://www.facebook.com/help/contact/234739086860192"
 if 'TERMUX_VERSION' in os.environ:
-    os.system(f"termux-open-url '{form_url}'")
+    os.system(f"termux-open-url '{url}'")
 else:
     import webbrowser
-    webbrowser.open(form_url)
+    webbrowser.open(url)
 
 print(f"""
-FINI !
+TERMINÉ !
+→ Acte sauvegardé dans Téléchargements
 → Formulaire ouvert
-→ Acte de décès généré ici : {chemin_image}
-→ Ouvre l'image depuis tes Téléchargements
-→ Remplis le formulaire :
+→ Remplis :
    • Nom : {nom}
    • Date décès : aujourd'hui
    • Email : {email}
    • Joindre l'image générée
-   • Envoyer
+→ Envoi = compte supprimé en 24-72h
 
-Compte supprimé en 24–72h max.
-
-Tu peux partager ce script, plus personne ne t'embêtera jamais
+Partage ce script, plus personne ne t'embêtera jamais
 """)
