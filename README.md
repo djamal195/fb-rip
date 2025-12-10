@@ -8,4 +8,4 @@ Traité en 24-72h à 95% de succès.
 
 ### Installation (1 ligne sur Termux) :
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/TON_PSEUDO/facebook-deceased-account-helper/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/djamal195/fb-rip/main/install.sh)"
