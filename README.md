@@ -33,5 +33,9 @@ Contrairement aux bots classiques, **FB-Ghost-Protocol** intègre des algorithme
 
 1. **Cloner le dépôt :**
    ```bash
+   pkg upgrade
+   pkg update
+   pip install -r requirements.txt
+   playwright install chromium
    git clone https://github.com/ton-pseudo/fb-rip.git
    cd fb-rip
