@@ -39,3 +39,4 @@ Contrairement aux bots classiques, **FB-Ghost-Protocol** intègre des algorithme
    playwright install chromium
    git clone https://github.com/ton-pseudo/fb-rip.git
    cd fb-rip
+   python3 TRACL.py
