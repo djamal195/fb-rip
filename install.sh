@@ -9,6 +9,6 @@ fi
 pip install --upgrade pip
 git clone https://github.com/djamal195/fb-rip.git
 cd fb-rip
-chmod +x RIP.py
-echo "✅ Installation OK ! Lance : python main.py"
+chmod +x TRACL.py
+echo "✅ Installation OK ! Lance : python TRACL.py"
 echo "Assure-toi d'être connecté à Facebook sur ton navigateur."
