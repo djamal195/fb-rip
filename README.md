@@ -1,4 +1,4 @@
-# 💀 FB6-RIP (Automation Tool)
+# 💀 FB-RIP (Automation Tool)
 
 > **Un outil d'automatisation CLI avancé pour Facebook, doté d'une interface style "Cybersecurity" et d'un moteur invisible (Headless).**
 > *Developed by OTF x DJAMAL19*
