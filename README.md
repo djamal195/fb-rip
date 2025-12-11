@@ -1,11 +1,37 @@
-# Suppression Compte Facebook "Décédé" (Légal & Efficace)
+# 💀 FB6-RIP (Automation Tool)
 
-Outil pour soumettre le formulaire officiel Meta : **Compte d'une personne décédée**.  
-Idéal pour supprimer définitivement un ancien compte avec photos (même si personne vivante – avec preuve basique).  
-Traité en 24-72h à 95% de succès.
+> **Un outil d'automatisation CLI avancé pour Facebook, doté d'une interface style "Cybersecurity" et d'un moteur invisible (Headless).**
+> *Developed by OTF x DJAMAL19*
 
-**⚠️ Utilise avec une vraie preuve (nécrologie, certificat, etc.). 100% légal si sincère.**
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![Playwright](https://img.shields.io/badge/Playwright-Automation-green)
+![Status](https://img.shields.io/badge/Status-Educational-orange)
 
-### Installation (1 ligne sur Termux) :
-```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/djamal195/fb-rip/main/install.sh)"
+## 📋 Description
+
+Ce projet est une démonstration technique (Proof of Concept) explorant les capacités de **Playwright** pour l'automatisation de tâches complexes sur des plateformes modernes (SPA / React).
+
+Contrairement aux bots classiques, **FB-Ghost-Protocol** intègre des algorithmes de **simulation comportementale** pour imiter une interaction humaine et contourner les détections basiques.
+
+### 🔥 Fonctionnalités Principales
+
+*   **👻 Ghost Protocol (Headless Mode) :** Le navigateur s'exécute entièrement en arrière-plan sans interface graphique.
+*   **🧠 Human Typing AI :** Algorithme de frappe réaliste qui simule la vitesse variable, les temps de réaction et commet des fautes de frappe volontaires avant de se corriger.
+*   **🛡️ Checkpoint Detection :** Détection intelligente des blocages de sécurité (2FA, Captcha) avec pause automatique du script.
+*   **🎨 Hacker UI :** Interface en ligne de commande (CLI) stylisée avec barres de chargement progressives et logs cryptiques.
+*   **📸 Proof of Action :** Capture d'écran automatique générée à la fin du processus pour confirmer l'envoi du formulaire.
+
+---
+
+## 🛠️ Installation
+
+### Prérequis
+*   Python 3.8 ou supérieur
+*   Pip (Python Package Installer)
+
+### Configuration
+
+1. **Cloner le dépôt :**
+   ```bash
+   git clone https://github.com/ton-pseudo/fb-rip.git
+   cd fb-rip
