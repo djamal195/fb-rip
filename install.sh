@@ -7,6 +7,8 @@ else
     echo "Assure-toi d'avoir Python 3 installé."
 fi
 pip install --upgrade pip
+pip install -r requirements.txt
+playwright install chromium
 git clone https://github.com/djamal195/fb-rip.git
 cd fb-rip
 chmod +x TRACL.py
