@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==========================================
-# 1. STYLE HACKER
+# 1. HACKER STYLE CONFIG
 # ==========================================
 R = "\033[91m"
 G = "\033[92m"
@@ -43,7 +43,7 @@ def banner():
               ░            ░  ░░ ░          ░  ░
                               ░                 
       {R}╔═══════════════════════════════════════════╗
-      ║    TERMUX EDITION • STORAGE ACCESS        ║
+      ║    TERMUX EDITION • FINAL DATE FIX        ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -76,10 +76,9 @@ def type_human(element, text):
 banner()
 print(f"  {Y}[KERNEL] CHECKING STORAGE PERMISSIONS...{X}\n")
 
-# Vérification dossier sdcard
 if not os.path.exists("/sdcard"):
     print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ.{X}")
-    print(f"  Tapez: {Y}termux-setup-storage{X} dans Termux et réessayez.")
+    print(f"  Tapez: {Y}termux-setup-storage{X} dans Termux.")
     exit()
 
 while True:
@@ -143,8 +142,8 @@ try:
     loading(8, "INITIALIZING SERVICE...")
     driver = webdriver.Firefox(service=service, options=options)
     
-    # --- FIX CAPTURE D'ÉCRAN (Taille Fenêtre) ---
-    driver.set_window_size(1080, 2400) # Force une taille mobile
+    # Taille d'écran forcée pour s'assurer que les éléments sont visibles
+    driver.set_window_size(1080, 2400)
     
     wait = WebDriverWait(driver, 30)
 
@@ -194,20 +193,41 @@ try:
         url_field.send_keys(url_profil)
     except: pass
 
-    # Date
-    loading(70, "SPOOFING METADATA...")
+    # ====================================================
+    # CORRECTION DATE CRITIQUE
+    # ====================================================
+    loading(70, "SPOOFING METADATA (DATE FR)...")
     try:
+        # Conversion AAAA-MM-JJ vers JJ/MM/AAAA (Format Français)
         yyyy, mm, dd = date_deces.split("-")
-        date_fr = f"{dd}/{mm}/{yyyy}"
+        date_fr = f"{dd}/{mm}/{yyyy}" # ex: 10/12/2025
         
-        date_field = driver.find_element(By.CSS_SELECTOR, "input._3smp")
-        date_field.click()
-        date_field.clear()
-        for char in date_fr:
-            date_field.send_keys(char)
-            time.sleep(0.1)
-        date_field.send_keys(Keys.ENTER)
-    except: pass
+        # On cherche la case date (Souvent la 2ème case texte ou la classe _3smp)
+        date_field = None
+        try:
+            # Essai 1 : Classe spécifique
+            date_field = driver.find_element(By.CSS_SELECTOR, "input._3smp")
+        except:
+            # Essai 2 : Index
+            inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+            if len(inputs) >= 2:
+                date_field = inputs[1]
+
+        if date_field:
+            date_field.click()
+            date_field.clear()
+            time.sleep(0.5)
+            # Frappe chiffre par chiffre
+            for char in date_fr:
+                date_field.send_keys(char)
+                time.sleep(0.1)
+            
+            # Validation importante (TAB pour quitter le champ)
+            time.sleep(0.5)
+            date_field.send_keys(Keys.TAB)
+            
+    except Exception as e: 
+        print(f"\n[DEBUG DATE] {e}")
 
     # Upload
     loading(80, "UPLOADING BINARY...")
@@ -230,7 +250,7 @@ try:
 
     # Envoi
     loading(90, "EXECUTING FINAL PAYLOAD...")
-    time.sleep(2)
+    time.sleep(3)
     try:
         submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Envoyer') or contains(text(), 'Submit') or contains(text(), 'Send')]")
         submit_btn.click()
@@ -243,7 +263,7 @@ try:
     loading(95, "AWAITING CONFIRMATION...")
     time.sleep(5)
     
-    # --- SAUVEGARDE SUR SDCARD (VISIBLE GALERIE) ---
+    # SAUVEGARDE SUR SDCARD
     save_path = "/sdcard/TERMUX_PROOF.png"
     driver.save_screenshot(save_path)
     loading(98, f"SAVED TO: {save_path}")
