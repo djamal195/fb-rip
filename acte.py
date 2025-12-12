@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# acte.py - HACKER EDITION
+# acte.py - HACKER EDITION (LOCATION FIX)
 # OTF x DJAMAL19
 
 from PIL import Image, ImageDraw, ImageFont
@@ -54,7 +54,9 @@ if not os.path.exists(FONT_NAME):
     os.system(f"curl -L -s -o {FONT_NAME} {FONT_URL}")
 
 if not os.path.exists("/sdcard"):
-    print(f"  {R}[ERROR] STORAGE PERMISSION DENIED.{X}"); sys.exit()
+    print(f"  {R}[ERROR] STORAGE PERMISSION DENIED.{X}")
+    print(f"  {W}Please run: termux-setup-storage{X}")
+    sys.exit()
 
 print(f"  {C}[SYSTEM] INITIALIZING FORGERY ENGINE...{X}\n")
 
@@ -158,13 +160,21 @@ filename = f"Death_Certificate_{clean_name}_{int(datetime.now().timestamp())}.pn
 save_path = f"/sdcard/{filename}"
 
 fake_loading("Finalizing Export")
-img.save(save_path)
-os.system(f'termux-clipboard-set "{save_path}"')
+try:
+    img.save(save_path)
+    os.system(f'termux-clipboard-set "{save_path}"')
+    
+    # --- AFFICHAGE CLAIR DU CHEMIN ---
+    print(f"""
+  {G}╔═══════════════════════════════════════════════════╗
+  ║      ✔ DOCUMENT FORGED SUCCESSFULLY               ║
+  ║                                                   ║
+  ║  📂 FILE SAVED AT :                               ║
+  ║  {Y}{save_path}{G}
+  ║                                                   ║
+  ║  📋 PATH COPIED TO CLIPBOARD                      ║
+  ╚═══════════════════════════════════════════════════╝{X}
+    """)
 
-print(f"""
-  {G}╔════════════════════════════════════════╗
-  ║      ✔ DOCUMENT FORGED SUCCESSFULLY    ║
-  ║      📂 {save_path}
-  ║      📋 PATH COPIED TO CLIPBOARD       ║
-  ╚════════════════════════════════════════╝{X}
-""")
+except Exception as e:
+    print(f"\n  {R}[ERROR] COULD NOT SAVE TO SDCARD: {e}{X}")
