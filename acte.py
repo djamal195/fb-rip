@@ -1,47 +1,57 @@
 #!/usr/bin/env python3
-# death_certificate_english.py
-# English Death Certificate Generator + Real Signature
-# Sauvegarde directe sur /sdcard/ pour que Firefox puisse le lire
+# death_certificate_hd.py
+# Générateur HD pour Termux (Télécharge la police automatiquement)
 
 from PIL import Image, ImageDraw, ImageFont
 import os
 import sys
+import time
 from datetime import datetime
+
+# ==========================================
+# 1. TÉLÉCHARGEMENT AUTOMATIQUE DE LA POLICE
+# ==========================================
+# On a besoin d'une vraie police (.ttf) pour que ce soit beau.
+# Si elle n'est pas là, on la télécharge depuis internet.
+
+FONT_URL = "https://github.com/matomo-org/travis-scripts/raw/master/fonts/Arial.ttf"
+FONT_NAME = "arial.ttf"
+
+if not os.path.exists(FONT_NAME):
+    print("⚠️ Police manquante. Téléchargement de Arial.ttf...")
+    os.system(f"curl -L -o {FONT_NAME} {FONT_URL}")
+    print("✅ Police installée !")
 
 # ==========================================
 # CONFIGURATION
 # ==========================================
-# Ta signature doit aussi être accessible. 
-# Mets-la dans le même dossier que le script ou sur sdcard.
 SIGNATURE_PATH = "signatur.jpg" 
 
 def clear():
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("clear")
 
 clear()
-print("\nENGLISH DEATH CERTIFICATE GENERATOR – SDCARD EDITION\n")
+print("\nENGLISH DEATH CERTIFICATE GENERATOR – HD TERMUX EDITION\n")
 
-# Vérification accès stockage
 if not os.path.exists("/sdcard"):
-    print("❌ ERREUR : Accès au stockage refusé.")
-    print("Tapez 'termux-setup-storage' dans Termux puis relancez.")
+    print("❌ ERREUR : Tapez 'termux-setup-storage' et réessayez.")
     sys.exit()
 
-# === INPUT (English) ===
+# === INPUT ===
 full_name       = input("Full name of deceased             : ").strip().upper()
 birth_date       = input("Date of birth (dd/mm/yyyy)       : ").strip()
 birth_place      = input("Place of birth                   : ").strip().title()
-death_date_input = input("Date of death (dd/mm/yyyy) [today if empty] : ").strip()
+death_date_input = input("Date of death (dd/mm/yyyy)       : ").strip()
 death_place      = input("Place of death (city)            : ").strip().title()
 age              = input("Age at death                     : ").strip()
-occupation       = input("Occupation (retired, student...) : ").strip() or "none"
-father           = input("Father's name (late ...)         : ").strip() or "late XXX"
-mother           = input("Mother's name (late ...)         : ").strip() or "late YYY"
+occupation       = input("Occupation                       : ").strip() or "none"
+father           = input("Father's name                    : ").strip() or "late XXX"
+mother           = input("Mother's name                    : ").strip() or "late YYY"
 informant        = input("Name of informant                : ").strip().title()
 informant_age    = input("Informant's age                  : ").strip()
-relation         = input("Relationship to deceased         : ").strip()
+relation         = input("Relationship                     : ").strip()
 
-# Auto today if empty
+# Date auto formatting
 if not death_date_input:
     today = datetime.now()
     month_en = ["January","February","March","April","May","June","July",
@@ -54,9 +64,9 @@ else:
                     "August","September","October","November","December"]
         death_date_letters = f"{d} {month_en[m-1]} {y}"
     except:
-        death_date_letters = death_date_input # Fallback si format bizarre
+        death_date_letters = death_date_input
 
-# === ENGLISH TEXT ===
+# === TEXTE ===
 text = (
     f"On this {death_date_letters}, at 10:30 a.m., died at his/her residence "
     f"located in {death_place}: {full_name}, "
@@ -68,89 +78,84 @@ text = (
     f"signed it with us."
 )
 
-# === CREATE IMAGE ===
+# === CRÉATION IMAGE HD ===
+# On garde les dimensions mais on charge la vraie police
 width, height = 1100, 700
 img = Image.new("RGB", (width, height), "white")
 draw = ImageDraw.Draw(img)
 
-# Font loading logic
+# Chargement de la police Arial téléchargée
 try:
-    # On essaie de charger une font système standard
-    font = ImageFont.truetype("/system/fonts/Roboto-Regular.ttf", 28)
-    font_title = ImageFont.truetype("/system/fonts/Roboto-Bold.ttf", 38)
-except:
-    try:
-        font = ImageFont.truetype("arial.ttf", 28)
-        font_title = ImageFont.truetype("arial.ttf", 38)
-    except:
-        font = ImageFont.load_default()
-        font_title = font
+    font_body = ImageFont.truetype(FONT_NAME, 28)  # Taille 28 pour le texte
+    font_title = ImageFont.truetype(FONT_NAME, 40) # Taille 40 pour le titre
+except Exception as e:
+    print(f"❌ Erreur police : {e}")
+    print("Utilisation police par défaut (Moche)")
+    font_body = ImageFont.load_default()
+    font_title = font_body
 
-# Title
-draw.text((width//2, 60), "DEATH CERTIFICATE EXTRACT", fill="black", font=font_title, anchor="mm")
+# Titre centré
+draw.text((width//2, 70), "DEATH CERTIFICATE EXTRACT", fill="black", font=font_title, anchor="mm")
 
-# Justified body text logic
+# --- ALGORITHME DE RETOUR À LA LIGNE (WORD WRAP) ---
+# C'est ce qui empêche le texte de dépasser sur les côtés
 margin = 80
-max_width = width - 2*margin
-y = 150
+max_width = width - (2 * margin)
+current_h = 160
 words = text.split()
 line = []
+
 for word in words:
-    test = " ".join(line + [word])
-    bbox = draw.textbbox((0,0), test, font=font)
-    if bbox[2] <= max_width:
+    # On teste la largeur de la ligne avec le nouveau mot
+    test_line = ' '.join(line + [word])
+    bbox = draw.textbbox((0, 0), test_line, font=font_body)
+    w_line = bbox[2] - bbox[0]
+    
+    if w_line <= max_width:
         line.append(word)
     else:
-        draw.text((margin, y), " ".join(line), fill="black", font=font)
-        y += 42
+        # On dessine la ligne et on passe à la suivante
+        draw.text((margin, current_h), ' '.join(line), font=font_body, fill="black")
+        current_h += 45 # Espace entre les lignes
         line = [word]
+
+# Dessiner la dernière ligne
 if line:
-    draw.text((margin, y), " ".join(line), fill="black", font=font)
-    y += 70
+    draw.text((margin, current_h), ' '.join(line), font=font_body, fill="black")
+    current_h += 80 # Marge après le texte
 
-# Signature text
-draw.text((margin, y), "For certified true copy,", fill="black", font=font)
-draw.text((margin, y + 45), "The Civil Registrar", fill="black", font=font_title)
+# Signature Text
+draw.text((margin, current_h), "For certified true copy,", fill="black", font=font_body)
+draw.text((margin, current_h + 40), "The Civil Registrar", fill="black", font=ImageFont.truetype(FONT_NAME, 32))
 
-# === PASTE SIGNATURE ===
+# === SIGNATURE IMAGE ===
 if os.path.exists(SIGNATURE_PATH):
     try:
         sign = Image.open(SIGNATURE_PATH).convert("RGBA")
-        sign.thumbnail((320, 160)) # Thumbnail est mieux que resize pour garder ratio
+        # On redimensionne proprement
+        sign.thumbnail((300, 150), Image.Resampling.LANCZOS)
         
-        # On crée un masque pour la transparence si c'est un jpg
+        # Gestion transparence
         mask = sign.split()[-1] if 'A' in sign.mode else None
         
-        img.paste(sign, (width - sign.width - 100, y + 100), mask)
-        print("Signature ajoutée.")
-    except Exception as e:
-        print(f"Erreur signature: {e}")
+        # Position signature (En bas à droite)
+        img.paste(sign, (width - sign.width - 100, current_h + 60), mask)
+        print("Signature insérée.")
+    except:
+        pass
 else:
-    print("Signature introuvable (pas grave).")
-    draw.line([(margin + 400, y + 120), (width - margin, y + 120)], fill="black", width=3)
+    # Ligne simple si pas d'image
+    draw.line([(width - 400, current_h + 150), (width - 100, current_h + 150)], fill="black", width=3)
 
-# === SAVE TO SDCARD (SOLUTION) ===
-# Nom du fichier
+# === SAUVEGARDE ===
 clean_name = full_name.replace(' ', '_')
-timestamp = int(datetime.now().timestamp())
-filename = f"Death_Certificate_{clean_name}_{timestamp}.png"
-
-# Chemin vers la SDCARD (Accessible par Firefox)
+filename = f"Death_Certificate_{clean_name}_{int(datetime.now().timestamp())}.png"
 save_path = f"/sdcard/{filename}"
 
-try:
-    img.save(save_path)
-    print(f"\n✅ SUCCÈS : CERTIFICAT GÉNÉRÉ !")
-    print(f"📂 EMPLACEMENT : {save_path}")
-    print(f"👉 Copie ce chemin pour le script FB : {save_path}")
-    
-    # Copier dans le presse-papier Termux automatiquement
-    os.system(f'termux-clipboard-set "{save_path}"')
-    print("(Chemin copié dans le presse-papier !)")
-    
-except Exception as e:
-    print(f"\n❌ ERREUR SAUVEGARDE SDCARD : {e}")
-    print("Essaie de lancer 'termux-setup-storage' et réessaie.")
-    # Fallback local
-    img.save(filename)
-    print(f"Sauvegardé localement à la place : {os.path.abspath(filename)}")
+img.save(save_path)
+
+print(f"\n✅ IMAGE HD GÉNÉRÉE !")
+print(f"📂 {save_path}")
+
+# Copie auto dans le presse-papier
+os.system(f'termux-clipboard-set "{save_path}"')
