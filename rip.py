@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==========================================
-# 1. HACKER STYLE CONFIG
+# 1. CONFIGURATION VISUELLE
 # ==========================================
 R = "\033[91m"
 G = "\033[92m"
@@ -32,18 +32,9 @@ def clear():
 def banner():
     clear()
     print(f"""{G}
-   ▄▄▄█████▓ ██▀███   ▄▄▄       ▄████▄   ██▓    
-   ▓  ██▒ ▓▒▓██ ▒ ██▒▒████▄    ▒██▀ ▀█  ▓██▒    
-   ▒ ▓██░ ▒░▓██ ░▄█ ▒▒██  ▀█▄  ▒▓█    ▄ ▒██░    
-   ░ ▓██▓ ░ ▒██▀▀█▄  ░██▄▄▄▄██ ▒▓▓▄ ▄██▒▒██░    
-     ▒██▒ ░ ░██▓ ▒██▒ ▓█   ▓██▒▒ ▓███▀ ░░██████▒
-     ▒ ░░   ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ░▒ ▒  ░░ ▒░▓  ░
-       ░      ░▒ ░ ▒░  ▒   ▒▒ ░  ░  ▒   ░ ░ ▒  ░
-     ░        ░░   ░   ░   ▒   ░          ░ ░   
-              ░            ░  ░░ ░          ░  ░
-                              ░                 
+      TERMUX EDITION • JS INJECTION FIX
       {R}╔═══════════════════════════════════════════╗
-      ║    TERMUX EDITION • FINAL DATE FIX        ║
+      ║    FORCE DATE VALIDATION (JAVASCRIPT)     ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -65,7 +56,6 @@ def type_human(element, text):
                 element.send_keys(wrong_char)
                 time.sleep(random.uniform(0.1, 0.3))
                 element.send_keys(Keys.BACK_SPACE)
-                time.sleep(random.uniform(0.1, 0.2))
             except: pass
         element.send_keys(char)
         time.sleep(random.uniform(0.05, 0.2))
@@ -128,7 +118,6 @@ driver = None
 try:
     loading(5, "LOCATING DRIVER...")
 
-    # Force le chemin Termux
     gecko_path = "/data/data/com.termux/files/usr/bin/geckodriver"
     if not os.path.exists(gecko_path):
         gecko_path = "/usr/bin/geckodriver"
@@ -141,8 +130,6 @@ try:
     
     loading(8, "INITIALIZING SERVICE...")
     driver = webdriver.Firefox(service=service, options=options)
-    
-    # Taille d'écran forcée pour s'assurer que les éléments sont visibles
     driver.set_window_size(1080, 2400)
     
     wait = WebDriverWait(driver, 30)
@@ -194,37 +181,33 @@ try:
     except: pass
 
     # ====================================================
-    # CORRECTION DATE CRITIQUE
+    # 🔥 CORRECTION DATE (INJECTION JS) 🔥
     # ====================================================
-    loading(70, "SPOOFING METADATA (DATE FR)...")
+    loading(70, "FORCE INJECTING DATE (JS)...")
     try:
-        # Conversion AAAA-MM-JJ vers JJ/MM/AAAA (Format Français)
+        # Conversion
         yyyy, mm, dd = date_deces.split("-")
-        date_fr = f"{dd}/{mm}/{yyyy}" # ex: 10/12/2025
+        date_fr = f"{dd}/{mm}/{yyyy}" # 12/05/2025
         
-        # On cherche la case date (Souvent la 2ème case texte ou la classe _3smp)
+        # Trouver le champ (Classe _3smp)
         date_field = None
         try:
-            # Essai 1 : Classe spécifique
             date_field = driver.find_element(By.CSS_SELECTOR, "input._3smp")
         except:
-            # Essai 2 : Index
             inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
-            if len(inputs) >= 2:
-                date_field = inputs[1]
+            if len(inputs) >= 2: date_field = inputs[1]
 
         if date_field:
-            date_field.click()
-            date_field.clear()
-            time.sleep(0.5)
-            # Frappe chiffre par chiffre
-            for char in date_fr:
-                date_field.send_keys(char)
-                time.sleep(0.1)
+            # TECHNIQUE HACKER : On force la valeur directement dans le moteur du navigateur
+            # On utilise JavaScript pour dire "La valeur est X" et "J'ai fini de taper"
+            driver.execute_script(f"arguments[0].value = '{date_fr}';", date_field)
             
-            # Validation importante (TAB pour quitter le champ)
-            time.sleep(0.5)
-            date_field.send_keys(Keys.TAB)
+            # On simule l'événement 'input' pour que Facebook React réagisse
+            driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", date_field)
+            
+            # On clique ailleurs pour valider (Blur)
+            driver.find_element(By.TAG_NAME, "body").click()
+            time.sleep(1)
             
     except Exception as e: 
         print(f"\n[DEBUG DATE] {e}")
@@ -253,17 +236,18 @@ try:
     time.sleep(3)
     try:
         submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Envoyer') or contains(text(), 'Submit') or contains(text(), 'Send')]")
-        submit_btn.click()
+        # On utilise JS pour cliquer aussi, c'est plus sûr
+        driver.execute_script("arguments[0].click();", submit_btn)
     except:
         try:
-            driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+            btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+            driver.execute_script("arguments[0].click();", btn)
         except: pass
 
-    # Capture corrigée
+    # Capture
     loading(95, "AWAITING CONFIRMATION...")
-    time.sleep(5)
+    time.sleep(8) # On attend un peu plus pour l'upload
     
-    # SAUVEGARDE SUR SDCARD
     save_path = "/sdcard/TERMUX_PROOF.png"
     driver.save_screenshot(save_path)
     loading(98, f"SAVED TO: {save_path}")
@@ -272,12 +256,15 @@ try:
     if "merci" in page_source or "thank" in page_source:
         loading(100, "OPERATION COMPLETED.")
         print(f"\n\n  {G}╔════════════════════════════════════════╗")
-        print(f"  ║   ✔ SYSTEM STATUS: TARGET DOWN       ║")
+        print(f"  ║   ✔ SUCCÈS : FORMULAIRE ENVOYÉ       ║")
         print(f"  ║   📁 PREUVE: /sdcard/TERMUX_PROOF.png║")
         print(f"  ╚════════════════════════════════════════╝{X}")
     else:
         loading(99, "PACKET SENT.")
-        print(f"\n\n  {Y}[!] PACKET SENT. CHECK '/sdcard/TERMUX_PROOF.png'.{X}")
+        print(f"\n\n  {Y}[!] PACKET SENT. VÉRIFIEZ L'IMAGE 'TERMUX_PROOF.png'.{X}")
+        # Si ça a échoué, on sauvegarde aussi le HTML pour comprendre
+        with open("/sdcard/debug_page.html", "w") as f:
+            f.write(driver.page_source)
 
     input(f"\n  {W}Press Enter to exit...{X}")
 
