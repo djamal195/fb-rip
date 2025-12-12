@@ -7,10 +7,10 @@ import random
 import string
 from datetime import datetime
 
-# Importations Selenium (Firefox)
+# Importations Selenium
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.service import Service # <--- IMPORTANT
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -56,7 +56,6 @@ def loading(percent, status=""):
     sys.stdout.flush()
 
 def type_human(element, text):
-    """Frappe réaliste"""
     time.sleep(random.uniform(0.5, 1.0))
     chars = string.ascii_lowercase + string.digits
     for char in text:
@@ -118,20 +117,29 @@ banner()
 print(f"\n  {Y}[*] STARTING FIREFOX ENGINE...{X}\n")
 
 # ==========================================
-# 3. EXÉCUTION FIREFOX
+# 3. EXÉCUTION (CORRECTION PATH)
 # ==========================================
 driver = None
 try:
-    loading(5, "INITIALIZING GECKO DRIVER...")
+    loading(5, "LOCATING DRIVER...")
+
+    # --- CORRECTION CHEMIN DRIVER TERMUX ---
+    # C'est l'emplacement standard sur Termux
+    gecko_path = "/data/data/com.termux/files/usr/bin/geckodriver"
     
-    # Options Firefox
+    # Vérification si le fichier existe
+    if not os.path.exists(gecko_path):
+        # Essai d'un autre chemin possible
+        gecko_path = "/usr/bin/geckodriver"
+    
+    service = Service(executable_path=gecko_path)
+    
     options = FirefoxOptions()
-    options.add_argument("--headless") # Invisible
-    # User Agent PC
+    options.add_argument("--headless") 
     options.set_preference("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0")
     
-    # Lancement du driver
-    driver = webdriver.Firefox(options=options)
+    loading(8, "INITIALIZING SERVICE...")
+    driver = webdriver.Firefox(service=service, options=options)
     wait = WebDriverWait(driver, 30)
 
     # Navigation
@@ -163,8 +171,7 @@ try:
             pass_field.send_keys(Keys.ENTER)
     except: pass
 
-    # Pause Checkpoint (Simulation)
-    loading(40, "VERIFYING SESSION TOKENS...")
+    loading(40, "VERIFYING SESSION...")
     time.sleep(10)
 
     if "checkpoint" in driver.current_url or "two_step" in driver.current_url:
@@ -254,6 +261,7 @@ try:
 except Exception as e:
     sys.stdout.write("\r" + " " * 80 + "\r")
     print(f"\n  {R}[ERROR] {e}{X}")
+    print(f"  {Y}Tip: Vérifie que 'pkg install geckodriver' est bien fait.{X}")
     if driver:
         driver.save_screenshot("crash_debug.png")
     input()
