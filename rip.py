@@ -42,7 +42,7 @@ def banner():
               ░            ░  ░░ ░          ░  ░
                               ░                 
       {R}╔═══════════════════════════════════════════╗
-      ║     TERMUX EDITION • LOGIN LOOP FIX       ║
+      ║   TERMUX EDITION • CLUMSY HUMAN TYPING    ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -54,22 +54,45 @@ def loading(percent, status=""):
     sys.stdout.write(f'\r  {C}[{bar}{C}] {G}{percent}%{X} :: {status}\033[K')
     sys.stdout.flush()
 
-def type_human(element, text):
-    time.sleep(random.uniform(0.5, 1.0))
+# ==========================================
+# 🔥 IA DE FRAPPE MALADROITE (ANTI-CHECKPOINT) 🔥
+# ==========================================
+def type_clumsy_human(element, text):
+    """
+    Simule un humain très lent qui fait des fautes et réfléchit.
+    """
+    # Pause initiale avant de commencer à taper
+    time.sleep(random.uniform(0.5, 1.5))
+    
     chars = string.ascii_lowercase + string.digits
+    
     for char in text:
-        if random.random() < 0.05:
+        # 15% de chance de faire une faute (C'est beaucoup, pour faire vrai)
+        if random.random() < 0.15:
             try:
+                # 1. On tape une mauvaise lettre
                 wrong_char = random.choice(chars)
                 element.send_keys(wrong_char)
-                time.sleep(random.uniform(0.1, 0.3))
+                
+                # 2. PAUSE DE RÉFLEXION (DEMANDÉE : ~3 SECONDES)
+                # Le bot s'arrête comme s'il disait "Ah merde..."
+                time.sleep(random.uniform(2.0, 3.5))
+                
+                # 3. On efface
                 element.send_keys(Keys.BACK_SPACE)
+                
+                # 4. Petite pause après correction
+                time.sleep(random.uniform(0.2, 0.5))
             except: pass
+        
+        # On tape la bonne lettre
         element.send_keys(char)
-        time.sleep(random.uniform(0.05, 0.2))
+        
+        # Vitesse de frappe très irrégulière (entre 0.1s et 0.4s par lettre)
+        time.sleep(random.uniform(0.1, 0.45))
 
 # ==========================================
-# 2. CONFIGURATION CIBLE (On le fait une seule fois)
+# 2. CONFIGURATION CIBLE
 # ==========================================
 banner()
 print(f"  {Y}[KERNEL] CONFIGURATION DE LA CIBLE...{X}\n")
@@ -126,35 +149,33 @@ try:
     # 🔥 BOUCLE DE CONNEXION (LOGIN LOOP) 🔥
     # ==========================================
     while True:
-        # On nettoie le terminal pour demander les infos
         sys.stdout.write("\r" + " " * 80 + "\r")
         print(f"\n  {Y}[AUTH] IDENTIFICATION REQUISE{X}")
         
-        # Saisie VISIBLE (plus de getpass)
         EMAIL = input(f"  {C}[USER] Email : {G}").strip()
-        # Ici on utilise input simple, donc le mot de passe est VISIBLE
         PASSWORD = input(f"  {C}[PASS] Pass  : {G}").strip() 
         print(f"{X}", end="")
 
         loading(10, "CONNECTING TO LOGIN PAGE...")
         driver.get("https://www.facebook.com/")
 
-        # Cookies
         try:
             time.sleep(2)
             cookie_btns = driver.find_elements(By.XPATH, "//button[contains(text(), 'Autoriser') or contains(text(), 'Accept') or contains(text(), 'Allow')]")
             if cookie_btns: cookie_btns[0].click()
         except: pass
 
-        loading(20, "INJECTING CREDENTIALS...")
+        loading(20, "INJECTING CREDENTIALS (CLUMSY MODE)...")
         try:
             email_field = wait.until(EC.presence_of_element_located((By.NAME, "email")))
-            email_field.clear() # On vide au cas où c'est le 2ème essai
-            type_human(email_field, EMAIL)
+            email_field.clear() 
+            # Utilisation de la frappe maladroite
+            type_clumsy_human(email_field, EMAIL)
             
             pass_field = driver.find_element(By.NAME, "pass")
             pass_field.clear()
-            type_human(pass_field, PASSWORD)
+            # Utilisation de la frappe maladroite
+            type_clumsy_human(pass_field, PASSWORD)
             
             loading(35, "ATTEMPTING LOGIN...")
             try:
@@ -164,38 +185,33 @@ try:
         except: pass
 
         loading(40, "VERIFYING STATUS...")
-        time.sleep(5) # On attend la réponse du serveur
+        time.sleep(8) 
 
-        # VÉRIFICATION DU SUCCÈS OU DE L'ÉCHEC
         current_url = driver.current_url
         page_source = driver.page_source.lower()
 
-        # Si l'URL contient encore "login" ou s'il y a un message d'erreur
-        if "login_attempt" in current_url or "incorrect" in page_source or "pas le bon mot de passe" in page_source:
-            print(f"\n\n  {R}[!] ERREUR : Email ou Mot de passe incorrect !{X}")
-            print(f"  {Y}>> Redémarrage de la connexion...{X}")
+        if "login_attempt" in current_url or "incorrect" in page_source:
+            print(f"\n\n  {R}[!] ERREUR : Identifiants incorrects !{X}")
             time.sleep(2)
-            continue # ON REBOUCLE AU DÉBUT DU WHILE
+            continue 
         
         elif "checkpoint" in current_url or "two_step" in current_url:
             print(f"\n  {R}[!] CHECKPOINT / 2FA DÉTECTÉ.{X}")
             print(f"  {W}Validez le code sur votre appareil, puis appuyez sur Entrée.{X}")
             input()
-            break # On sort de la boucle si 2FA passé
+            break 
             
         else:
             print(f"\n  {G}[SUCCESS] CONNEXION RÉUSSIE.{X}")
-            break # ON SORT DE LA BOUCLE, ON CONTINUE LE SCRIPT
+            break 
 
     # ==========================================
-    # SUITE DU SCRIPT (Formulaire)
+    # SUITE DU SCRIPT
     # ==========================================
-
-    # Formulaire
     loading(50, "RESOLVING TARGET NODE...")
     driver.get("https://www.facebook.com/help/contact/234739086860192")
     
-    # URL (FBUrl)
+    # URL
     loading(60, "INJECTING PAYLOAD [FBUrl]...")
     try:
         try:
@@ -220,9 +236,8 @@ try:
             time.sleep(0.5)
             date_field.send_keys(date_deces)
             time.sleep(0.5)
-            date_field.send_keys(Keys.TAB)
+            date_field.send_keys(Keys.TAB) # Validation TAB
             
-            # Securité JS si vide
             if not date_field.get_attribute("value"):
                  driver.execute_script(f"arguments[0].value = '{date_deces}';", date_field)
     except Exception as e: pass
