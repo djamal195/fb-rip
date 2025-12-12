@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==========================================
-# 1. CONFIGURATION VISUELLE
+# 1. HACKER STYLE CONFIG
 # ==========================================
 R = "\033[91m"
 G = "\033[92m"
@@ -32,9 +32,18 @@ def clear():
 def banner():
     clear()
     print(f"""{G}
-      TERMUX EDITION • JS INJECTION FIX
+   ▄▄▄█████▓ ██▀███   ▄▄▄       ▄████▄   ██▓    
+   ▓  ██▒ ▓▒▓██ ▒ ██▒▒████▄    ▒██▀ ▀█  ▓██▒    
+   ▒ ▓██░ ▒░▓██ ░▄█ ▒▒██  ▀█▄  ▒▓█    ▄ ▒██░    
+   ░ ▓██▓ ░ ▒██▀▀█▄  ░██▄▄▄▄██ ▒▓▓▄ ▄██▒▒██░    
+     ▒██▒ ░ ░██▓ ▒██▒ ▓█   ▓██▒▒ ▓███▀ ░░██████▒
+     ▒ ░░   ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ░▒ ▒  ░░ ▒░▓  ░
+       ░      ░▒ ░ ▒░  ▒   ▒▒ ░  ░  ▒   ░ ░ ▒  ░
+     ░        ░░   ░   ░   ▒   ░          ░ ░   
+              ░            ░  ░░ ░          ░  ░
+                              ░                 
       {R}╔═══════════════════════════════════════════╗
-      ║    FORCE DATE VALIDATION (JAVASCRIPT)     ║
+      ║    TERMUX EDITION • ULTIMATE DATE FIX     ║
       ║         DEV BY: {Y}OTF x DJAMAL19{R}            ║
       ╚═══════════════════════════════════════════╝{X}
 """)
@@ -61,14 +70,13 @@ def type_human(element, text):
         time.sleep(random.uniform(0.05, 0.2))
 
 # ==========================================
-# 2. CONFIGURATION
+# 2. CONFIGURATION (NOUVEAU FORMAT DATE)
 # ==========================================
 banner()
-print(f"  {Y}[KERNEL] CHECKING STORAGE PERMISSIONS...{X}\n")
+print(f"  {Y}[KERNEL] CHECKING PERMISSIONS...{X}\n")
 
 if not os.path.exists("/sdcard"):
-    print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ.{X}")
-    print(f"  Tapez: {Y}termux-setup-storage{X} dans Termux.")
+    print(f"  {R}[ERROR] ACCÈS STOCKAGE REFUSÉ. Tapez 'termux-setup-storage'{X}")
     exit()
 
 while True:
@@ -91,10 +99,12 @@ sys.stdout.write(f"  {C}root@termux:~# {X}SET RHOST_URL  : {G}")
 sys.stdout.flush()
 url_profil = input().strip()
 
-sys.stdout.write(f"  {C}root@termux:~# {X}SET TIMESTAMP  : {G}")
+# --- MODIFICATION ICI : EXEMPLE CLAIR ---
+sys.stdout.write(f"  {C}root@termux:~# {X}SET DATE (Ex: 11/12/2005) : {G}")
 sys.stdout.flush()
 date_input = input().strip()
-date_deces = date_input if date_input else datetime.now().strftime("%Y-%m-%d")
+# Si vide, on met la date d'aujourd'hui en format JJ/MM/AAAA
+date_deces = date_input if date_input else datetime.now().strftime("%d/%m/%Y")
 
 sys.stdout.write(f"  {C}root@termux:~# {X}SET BINARY_SRC : {G}")
 sys.stdout.flush()
@@ -181,13 +191,11 @@ try:
     except: pass
 
     # ====================================================
-    # 🔥 CORRECTION DATE (INJECTION JS) 🔥
+    # 🔥 CORRECTION DATE (DOUBLE FRAPPE + TAB) 🔥
     # ====================================================
-    loading(70, "FORCE INJECTING DATE (JS)...")
+    loading(70, f"SPOOFING DATE ({date_deces})...")
     try:
-        # Conversion
-        yyyy, mm, dd = date_deces.split("-")
-        date_fr = f"{dd}/{mm}/{yyyy}" # 12/05/2025
+        # On utilise DIRECTEMENT la date saisie (Format JJ/MM/AAAA attendu)
         
         # Trouver le champ (Classe _3smp)
         date_field = None
@@ -198,16 +206,22 @@ try:
             if len(inputs) >= 2: date_field = inputs[1]
 
         if date_field:
-            # TECHNIQUE HACKER : On force la valeur directement dans le moteur du navigateur
-            # On utilise JavaScript pour dire "La valeur est X" et "J'ai fini de taper"
-            driver.execute_script(f"arguments[0].value = '{date_fr}';", date_field)
+            date_field.click()
+            time.sleep(0.5)
             
-            # On simule l'événement 'input' pour que Facebook React réagisse
-            driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", date_field)
+            # 1. On écrit
+            date_field.send_keys(date_deces)
+            time.sleep(0.5)
             
-            # On clique ailleurs pour valider (Blur)
-            driver.find_element(By.TAG_NAME, "body").click()
-            time.sleep(1)
+            # 2. On valide avec TAB (Important pour que Facebook détecte)
+            date_field.send_keys(Keys.TAB)
+            time.sleep(0.5)
+            
+            # 3. Sécurité : Si le champ est toujours vide, on force
+            current_val = date_field.get_attribute("value")
+            if not current_val:
+                # Injection JS si le clavier n'a pas marché
+                driver.execute_script(f"arguments[0].value = '{date_deces}';", date_field)
             
     except Exception as e: 
         print(f"\n[DEBUG DATE] {e}")
@@ -236,17 +250,15 @@ try:
     time.sleep(3)
     try:
         submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Envoyer') or contains(text(), 'Submit') or contains(text(), 'Send')]")
-        # On utilise JS pour cliquer aussi, c'est plus sûr
-        driver.execute_script("arguments[0].click();", submit_btn)
+        submit_btn.click()
     except:
         try:
-            btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            driver.execute_script("arguments[0].click();", btn)
+            driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         except: pass
 
     # Capture
     loading(95, "AWAITING CONFIRMATION...")
-    time.sleep(8) # On attend un peu plus pour l'upload
+    time.sleep(8)
     
     save_path = "/sdcard/TERMUX_PROOF.png"
     driver.save_screenshot(save_path)
@@ -262,9 +274,6 @@ try:
     else:
         loading(99, "PACKET SENT.")
         print(f"\n\n  {Y}[!] PACKET SENT. VÉRIFIEZ L'IMAGE 'TERMUX_PROOF.png'.{X}")
-        # Si ça a échoué, on sauvegarde aussi le HTML pour comprendre
-        with open("/sdcard/debug_page.html", "w") as f:
-            f.write(driver.page_source)
 
     input(f"\n  {W}Press Enter to exit...{X}")
 
